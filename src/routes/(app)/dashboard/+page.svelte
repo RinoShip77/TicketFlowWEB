@@ -49,7 +49,7 @@
 	}
 
 	// ── Donut chart (SVG) — Category Analytics ─────────────────────
-	const donutDepts = $derived(() => {
+	const donutDepts = $derived.by(() => {
 		if (!stats?.departments) return [];
 		const total = stats.overview.total;
 		const palette = ['#4f46e5', '#a855f7', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
@@ -75,7 +75,7 @@
 	});
 
 	// ── Line chart (SVG) — Ticket Activity ──────────────────────────
-	const lineChartData = $derived(() => {
+	const lineChartData = $derived.by(() => {
 		if (!stats) return { total: [], resolved: [], pending: [], months: [] };
 		const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 		const total = stats.overview.total;
@@ -120,7 +120,7 @@
 		};
 	});
 
-	const statCards = $derived(() => {
+	const statCards = $derived.by(() => {
 		if (!stats) return [];
 		return [
 			{
@@ -177,9 +177,9 @@
 	</div>
 
 	<!-- ── Stat Cards ─────────────────────────────────────────────── -->
-	{#if statCards().length > 0}
+	{#if statCards.length > 0}
 		<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-			{#each statCards() as card}
+			{#each statCards as card}
 				<div class="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 p-5 flex items-center justify-between shadow-sm transition-colors">
 					<div>
 						<p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">{card.label}</p>
@@ -204,7 +204,7 @@
 			</div>
 
 			{#if stats}
-				{@const chart = lineChartData()}
+				{@const chart = lineChartData}
 				<div class="overflow-x-auto">
 					<svg viewBox="0 0 {chart.w} {chart.h + 24}" width="100%" class="min-w-64" aria-label="Ticket activity line chart">
 						<!-- Grid lines adapt to theme -->
@@ -252,8 +252,8 @@
 		<div class="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 p-5 shadow-sm transition-colors">
 			<h3 class="font-semibold text-gray-900 dark:text-white mb-4">Category Analytics</h3>
 
-			{#if stats && donutDepts().length > 0}
-				{@const depts = donutDepts()}
+			{#if stats && donutDepts.length > 0}
+				{@const depts = donutDepts}
 				<div class="flex justify-center mb-4">
 					<svg viewBox="0 0 140 140" width="140" height="140" aria-label="Category analytics donut chart">
 						<!-- Donut slices -->

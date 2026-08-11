@@ -17,8 +17,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
 	// Chargement des techniciens pour le select "Assigné à"
 	let technicians: User[] = [];
 	try {
-		const res = await apiFetch<{ value: User[] }>('/api/technicians', { token });
-		technicians = res.value ?? [];
+		const res = await apiFetch<User[] | { value: User[] }>('/api/technicians', { token });
+		technicians = Array.isArray(res) ? res : res?.value ?? [];
 	} catch {
 		// Non bloquant — le dropdown sera vide
 	}
