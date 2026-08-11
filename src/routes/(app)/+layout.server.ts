@@ -4,11 +4,12 @@
  * Ce fichier est exécuté côté serveur avant chaque rendu d'une page
  * appartenant au groupe (app). Il lit le cookie `tf_token`.
  * Si absent → redirect immédiat vers /login.
- * Si présent → expose `user` aux pages via `locals` (via hooks) ou `data`.
+ * Si présent → expose `user` aux pages via `data`.
  */
 
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
+import type { User } from '$lib/types';
 
 export const load: LayoutServerLoad = async ({ cookies }) => {
 	const token = cookies.get('tf_token');
@@ -17,12 +18,19 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 		throw redirect(302, '/login');
 	}
 
-	// Le token est validé ici. Dans une app de production, vous pourriez
-	// appeler GET /api/auth/me pour vérifier la validité du token
-	// et récupérer les infos utilisateur fraîches.
-	// Pour l'instant, on fait confiance au cookie existant.
+	// Lecture de l'utilisateur depuis le cookie tf_user (défini au login)
+	let user: User | null = null;
+	const userCookie = cookies.get('tf_user');
+	if (userCookie) {
+		try {
+			user = JSON.parse(decodeURIComponent(userCookie)) as User;
+		} catch {
+			// Cookie corrompu → on ignore
+		}
+	}
 
 	return {
-		authenticated: true
+		authenticated: true,
+		user
 	};
 };

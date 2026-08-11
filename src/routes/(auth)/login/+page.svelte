@@ -32,10 +32,10 @@
 	<meta name="description" content="Connectez-vous à TicketFlow pour gérer vos tickets de support." />
 </svelte:head>
 
-<div class="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/60 rounded-2xl p-8 shadow-2xl shadow-black/40">
+<div class="bg-white dark:bg-zinc-900/90 backdrop-blur-sm border border-gray-200 dark:border-zinc-800/80 rounded-2xl p-8 shadow-xl dark:shadow-black/40 transition-colors duration-200">
 	<div class="mb-6">
-		<h1 class="text-xl font-bold text-white">Connexion</h1>
-		<p class="text-sm text-zinc-400 mt-1">Accédez à votre espace technicien.</p>
+		<h1 class="text-xl font-bold text-gray-900 dark:text-white">Connexion</h1>
+		<p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">Accédez à votre espace technicien.</p>
 	</div>
 
 	{#if justRegistered}
@@ -93,9 +93,9 @@
 		</div>
 	</form>
 
-	<p class="text-sm text-zinc-500 text-center mt-6">
+	<p class="text-sm text-gray-500 dark:text-zinc-400 text-center mt-6">
 		Pas encore de compte ?
-		<a href="/register" class="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+		<a href="/register" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium transition-colors">
 			Créer un compte
 		</a>
 	</p>

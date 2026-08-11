@@ -32,10 +32,10 @@
 	<meta name="description" content="Créez votre compte technicien TicketFlow." />
 </svelte:head>
 
-<div class="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/60 rounded-2xl p-8 shadow-2xl shadow-black/40">
+<div class="bg-white dark:bg-zinc-900/90 backdrop-blur-sm border border-gray-200 dark:border-zinc-800/80 rounded-2xl p-8 shadow-xl dark:shadow-black/40 transition-colors duration-200">
 	<div class="mb-6">
-		<h1 class="text-xl font-bold text-white">Créer un compte</h1>
-		<p class="text-sm text-zinc-400 mt-1">Rejoignez l'équipe TicketFlow.</p>
+		<h1 class="text-xl font-bold text-gray-900 dark:text-white">Créer un compte</h1>
+		<p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">Rejoignez l'équipe TicketFlow.</p>
 	</div>
 
 	{#if form?.formError}
@@ -84,9 +84,9 @@
 
 		<!-- Niveau -->
 		<div class="flex flex-col gap-1.5">
-			<label for="level" class="text-sm font-medium text-zinc-300">
+			<label for="level" class="text-sm font-medium text-gray-700 dark:text-zinc-300">
 				Niveau technique
-				<span class="text-indigo-400 ml-0.5" aria-hidden="true">*</span>
+				<span class="text-indigo-600 dark:text-indigo-400 ml-0.5" aria-hidden="true">*</span>
 			</label>
 			<select
 				id="level"
@@ -95,9 +95,9 @@
 				required
 				class="
 					w-full rounded-lg px-3.5 py-2.5 text-sm
-					bg-zinc-900 border transition-all duration-200
-					text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-					{fieldErrors.level ? 'border-red-500/70' : 'border-zinc-700/60 hover:border-zinc-600'}
+					bg-white dark:bg-zinc-900 border transition-all duration-200
+					text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+					{fieldErrors.level ? 'border-red-500 dark:border-red-500/70' : 'border-gray-300 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-600'}
 				"
 			>
 				{#each [1, 2, 3] as n}
@@ -105,11 +105,11 @@
 				{/each}
 			</select>
 			{#if fieldErrors.level}
-				<p class="text-xs text-red-400 flex items-center gap-1" role="alert">
+				<p class="text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
 					{fieldErrors.level}
 				</p>
 			{/if}
-			<p class="text-xs text-zinc-500">1 = Débutant · 2 = Intermédiaire · 3 = Expert</p>
+			<p class="text-xs text-gray-500 dark:text-zinc-400">1 = Débutant · 2 = Intermédiaire · 3 = Expert</p>
 		</div>
 
 		<!-- Mot de passe -->
@@ -146,9 +146,9 @@
 		</div>
 	</form>
 
-	<p class="text-sm text-zinc-500 text-center mt-6">
+	<p class="text-sm text-gray-500 dark:text-zinc-400 text-center mt-6">
 		Déjà un compte ?
-		<a href="/login" class="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+		<a href="/login" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium transition-colors">
 			Se connecter
 		</a>
 	</p>

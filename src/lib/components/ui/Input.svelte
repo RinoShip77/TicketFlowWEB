@@ -29,10 +29,10 @@
 </script>
 
 <div class="flex flex-col gap-1.5 {className}">
-	<label for={id} class="text-sm font-medium text-zinc-300">
+	<label for={id} class="text-sm font-medium text-gray-700 dark:text-zinc-300">
 		{label}
 		{#if required}
-			<span class="text-indigo-400 ml-0.5" aria-hidden="true">*</span>
+			<span class="text-indigo-600 dark:text-indigo-400 ml-0.5" aria-hidden="true">*</span>
 		{/if}
 	</label>
 
@@ -48,17 +48,17 @@
 		aria-invalid={!!error}
 		class="
 			w-full rounded-lg px-3.5 py-2.5 text-sm
-			bg-zinc-900 border transition-all duration-200
-			text-zinc-100 placeholder:text-zinc-600
+			bg-white dark:bg-zinc-900 border transition-all duration-200
+			text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500
 			focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
 			{error
-			? 'border-red-500/70 focus:ring-red-500'
-			: 'border-zinc-700/60 hover:border-zinc-600'}
+				? 'border-red-500 dark:border-red-500/70 focus:ring-red-500'
+				: 'border-gray-300 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-600'}
 		"
 	/>
 
 	{#if error}
-		<p id="{id}-error" class="text-xs text-red-400 flex items-center gap-1" role="alert">
+		<p id="{id}-error" class="text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
 			<svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
 				<path
 					fill-rule="evenodd"
@@ -69,6 +69,6 @@
 			{error}
 		</p>
 	{:else if hint}
-		<p id="{id}-hint" class="text-xs text-zinc-500">{hint}</p>
+		<p id="{id}-hint" class="text-xs text-gray-500 dark:text-zinc-400">{hint}</p>
 	{/if}
 </div>

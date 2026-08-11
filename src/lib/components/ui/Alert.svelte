@@ -23,20 +23,20 @@
 
 	const styles: Record<AlertVariant, { wrapper: string; icon: string }> = {
 		error: {
-			wrapper: 'bg-red-500/10 border-red-500/30 text-red-300',
-			icon: 'text-red-400'
+			wrapper: 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300',
+			icon: 'text-red-500 dark:text-red-400'
 		},
 		success: {
-			wrapper: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
-			icon: 'text-emerald-400'
+			wrapper: 'bg-green-50 dark:bg-emerald-500/10 border-green-200 dark:border-emerald-500/30 text-green-800 dark:text-emerald-300',
+			icon: 'text-green-500 dark:text-emerald-400'
 		},
 		warning: {
-			wrapper: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
-			icon: 'text-amber-400'
+			wrapper: 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300',
+			icon: 'text-amber-500 dark:text-amber-400'
 		},
 		info: {
-			wrapper: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300',
-			icon: 'text-indigo-400'
+			wrapper: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-800 dark:text-indigo-300',
+			icon: 'text-indigo-500 dark:text-indigo-400'
 		}
 	};
 
