@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page as pageState } from '$app/state';
 	import type { PageData } from './$types';
-	import type { Ticket, TicketStatus } from '$lib/types';
+	import type { TicketStatus } from '$lib/types';
 
 	interface Props {
 		data: PageData;
@@ -10,42 +10,54 @@
 
 	let { data }: Props = $props();
 
-	const { tickets, meta, filters } = data;
-
 	// ── Filter state ─────────────────────────────────────────────
-	let searchValue = $state(filters.search);
-	let statusFilter = $state(filters.status);
+	let searchValue = $state(data.filters.search);
+	let statusFilter = $state(data.filters.status);
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
-	function applyFilter(overrides: Partial<typeof filters>) {
+	// Sync local filter input values if URL parameters change
+	$effect(() => {
+		searchValue = data.filters.search;
+		statusFilter = data.filters.status;
+	});
+
+	function applyFilter(overrides: { page?: number; status?: string; search?: string }) {
 		const params = new URLSearchParams(pageState.url.searchParams);
-		params.set('page', '1');
+
+		if (overrides.page !== undefined) {
+			params.set('page', String(overrides.page));
+		} else {
+			// Si on recherche ou change de statut, on réinitialise à la page 1
+			params.set('page', '1');
+		}
+
 		if (overrides.status !== undefined) {
 			if (overrides.status) params.set('status', overrides.status);
 			else params.delete('status');
 		}
+
 		if (overrides.search !== undefined) {
 			if (overrides.search) params.set('search', overrides.search);
 			else params.delete('search');
 		}
-		if (overrides.page !== undefined) params.set('page', String(overrides.page));
-		goto(`?${params.toString()}`, { keepFocus: true });
+
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
 	}
 
 	function onSearchInput() {
 		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => applyFilter({ search: searchValue }), 400);
+		searchTimeout = setTimeout(() => applyFilter({ search: searchValue }), 350);
 	}
 
 	function onStatusChange() {
 		applyFilter({ status: statusFilter });
 	}
 
-	// ── Pagination pages array ───────────────────────────────────
-	const paginationPages = $derived(() => {
-		if (!meta) return [];
-		const total = meta.totalPages;
-		const current = meta.currentPage;
+	// ── Pagination pages array ($derived.by réactif sur data.meta) ──
+	const paginationPages = $derived.by(() => {
+		if (!data.meta) return [];
+		const total = data.meta.totalPages;
+		const current = data.meta.currentPage;
 		const pages: (number | '...')[] = [];
 		if (total <= 7) {
 			for (let i = 1; i <= total; i++) pages.push(i);
@@ -172,7 +184,7 @@
 		</div>
 
 		<!-- Table -->
-		{#if tickets.length === 0}
+		{#if !data.tickets || data.tickets.length === 0}
 			<div class="py-16 text-center">
 				<svg class="w-10 h-10 text-gray-300 dark:text-zinc-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />
@@ -195,7 +207,7 @@
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
-						{#each tickets as ticket (ticket._id)}
+						{#each data.tickets as ticket (ticket._id)}
 							{@const sb = statusBadge(ticket.status)}
 							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100">
 								<td class="px-5 py-3.5 text-gray-400 dark:text-zinc-500 text-xs font-mono">
@@ -252,12 +264,12 @@
 			</div>
 
 			<!-- Pagination -->
-			{#if meta && meta.totalPages > 1}
+			{#if data.meta && data.meta.totalPages > 1}
 				<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
 					<!-- Previous -->
 					<button
-						onclick={() => applyFilter({ page: meta.currentPage - 1 })}
-						disabled={meta.currentPage === 1}
+						onclick={() => applyFilter({ page: data.meta.currentPage - 1 })}
+						disabled={data.meta.currentPage === 1}
 						class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 					>
 						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -268,7 +280,7 @@
 
 					<!-- Page numbers -->
 					<div class="flex items-center gap-1">
-						{#each paginationPages() as p}
+						{#each paginationPages as p}
 							{#if p === '...'}
 								<span class="w-8 text-center text-gray-400 dark:text-zinc-600 text-sm">…</span>
 							{:else}
@@ -276,11 +288,11 @@
 									onclick={() => applyFilter({ page: p as number })}
 									class="
 										w-8 h-8 rounded-lg text-sm font-medium transition-colors duration-100
-										{meta.currentPage === p
-											? 'bg-indigo-600 text-white font-semibold'
+										{data.meta.currentPage === p
+											? 'bg-indigo-600 text-white font-semibold shadow-xs'
 											: 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100'}
 									"
-									aria-current={meta.currentPage === p ? 'page' : undefined}
+									aria-current={data.meta.currentPage === p ? 'page' : undefined}
 								>
 									{p}
 								</button>
@@ -290,8 +302,8 @@
 
 					<!-- Next -->
 					<button
-						onclick={() => applyFilter({ page: meta.currentPage + 1 })}
-						disabled={!meta.hasNext}
+						onclick={() => applyFilter({ page: data.meta.currentPage + 1 })}
+						disabled={!data.meta.hasNext}
 						class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 					>
 						Next
