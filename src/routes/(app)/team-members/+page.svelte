@@ -761,7 +761,12 @@
 										<a
 											href="/team-members/{memberId}"
 											id="btn-edit-member-{memberId}"
-											class="px-2.5 py-1 text-xs font-medium rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors inline-flex items-center gap-1"
+											class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg
+												text-indigo-700 dark:text-indigo-300
+												bg-indigo-50 dark:bg-indigo-950/40
+												hover:bg-indigo-100 dark:hover:bg-indigo-900/50
+												border border-indigo-200 dark:border-indigo-800/50
+												transition-colors"
 											aria-label="Voir ou modifier {member.name}"
 										>
 											<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
