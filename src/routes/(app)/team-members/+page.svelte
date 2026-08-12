@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import { getSettings, updateSettings, initSettings } from '$lib/settings.svelte';
+	import { t } from '$lib/i18n.svelte';
 
 	interface Props {
 		data: PageData;
@@ -507,7 +508,7 @@
 										{sortBy === 'name' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par nom"
 								>
-									Member
+									{t('member')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'name' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'name' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -538,7 +539,7 @@
 										{sortBy === 'email' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par e-mail"
 								>
-									Email
+									{t('email')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'email' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'email' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -569,7 +570,7 @@
 										{sortBy === 'department' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par département"
 								>
-									Department
+									{t('department')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'department' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'department' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -600,7 +601,7 @@
 										{sortBy === 'roleTitle' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par rôle"
 								>
-									Role
+									{t('role')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'roleTitle' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'roleTitle' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -631,7 +632,7 @@
 										{sortBy === 'level' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par niveau"
 								>
-									Level
+									{t('level')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'level' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'level' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -662,7 +663,7 @@
 										{sortBy === 'status' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par statut"
 								>
-									Status
+									{t('status')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'status' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'status' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -681,7 +682,7 @@
 								</button>
 							</th>
 
-							<th class="px-4 py-3.5">Action</th>
+							<th class="px-4 py-3.5">{t('action')}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">

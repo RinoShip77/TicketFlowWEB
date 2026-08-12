@@ -4,6 +4,7 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getSettings, updateSettings, initSettings, type UserSettings } from '$lib/settings.svelte';
 	import { playUrgentTicketAlert } from '$lib/sound';
+	import { t } from '$lib/i18n.svelte';
 
 	interface Props {
 		data: PageData;
@@ -40,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<title>Settings — TicketFlow</title>
+	<title>{t('settings_title')} — TicketFlow</title>
 	<meta name="description" content="Paramètres et préférences de l'application TicketFlow." />
 </svelte:head>
 
@@ -49,9 +50,9 @@
 	<!-- ── Header ──────────────────────────────────────────────────── -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Settings</h2>
+			<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{t('settings_title')}</h2>
 			<p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">
-				Personnalisez votre apparence, vos notifications et vos préférences d'utilisation.
+				{t('settings_subtitle')}
 			</p>
 		</div>
 
@@ -61,7 +62,7 @@
 				<svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
 				</svg>
-				Modifications enregistrées !
+				{t('settings_saved')}
 			</div>
 		{/if}
 	</div>
@@ -74,18 +75,18 @@
 					<svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M16.5 6.5l-3.5 3.5m-3.5-3.5l3.5 3.5m0-7.5a3.75 3.75 0 0 1 5.304 5.304l-6.402 6.401a3.75 3.75 0 0 1-5.304 0l-6.401-6.402a3.75 3.75 0 0 1 0-5.304l6.401-6.402Z" />
 					</svg>
-					Apparence & Thème
+					{t('appearance_title')}
 				</h3>
-				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Choisissez le mode visuel de l'interface.</p>
+				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('appearance_desc')}</p>
 			</div>
 		</div>
 
 		<!-- Switch Thème (Système / Clair / Sombre) -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label class="text-sm font-medium text-gray-800 dark:text-zinc-200">Thème de l'application</label>
+				<label class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('theme_label')}</label>
 				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-					S'adapte à vos préférences système ou bascule directement en clair / sombre.
+					{t('theme_desc')}
 				</p>
 			</div>
 			<ThemeToggle />
@@ -96,8 +97,8 @@
 		<!-- Mode Densité -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label for="select-density" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Densité de l'interface</label>
-				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Ajuste l'espacement et la taille des tableaux.</p>
+				<label for="select-density" class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('density_label')}</label>
+				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('density_desc')}</p>
 			</div>
 			<select
 				id="select-density"
@@ -105,8 +106,8 @@
 				onchange={(e) => saveSetting('density', (e.target as HTMLSelectElement).value as any)}
 				class="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
 			>
-				<option value="comfortable">Confortable (Par défaut)</option>
-				<option value="compact">Compacte</option>
+				<option value="comfortable">{t('density_comfortable')}</option>
+				<option value="compact">{t('density_compact')}</option>
 			</select>
 		</div>
 
@@ -115,8 +116,8 @@
 		<!-- Vue par défaut des tickets -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label for="select-view" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Vue par défaut des tickets</label>
-				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Sélectionne la présentation de la liste des tickets.</p>
+				<label for="select-view" class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('default_view_label')}</label>
+				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('default_view_desc')}</p>
 			</div>
 			<select
 				id="select-view"
@@ -124,8 +125,8 @@
 				onchange={(e) => saveSetting('defaultTicketsView', (e.target as HTMLSelectElement).value as any)}
 				class="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
 			>
-				<option value="list">Vue Liste (Tableau)</option>
-				<option value="grid">Vue Grille (Cartes)</option>
+				<option value="list">{t('view_list')}</option>
+				<option value="grid">{t('view_grid')}</option>
 			</select>
 		</div>
 	</div>

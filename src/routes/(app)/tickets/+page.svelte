@@ -6,6 +6,7 @@
 	import type { PageData } from './$types';
 	import type { TicketStatus } from '$lib/types';
 	import { getSettings, updateSettings, initSettings } from '$lib/settings.svelte';
+	import { t } from '$lib/i18n.svelte';
 
 	interface Props {
 		data: PageData;
@@ -545,7 +546,7 @@
 										{sortBy === '_id' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par ID de ticket"
 								>
-									Ticket ID
+									{t('ticket_id')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === '_id' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === '_id' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -576,7 +577,7 @@
 										{sortBy === 'title' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par sujet"
 								>
-									Subject
+									{t('subject')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'title' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'title' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -607,7 +608,7 @@
 										{sortBy === 'originDepartment' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par catégorie"
 								>
-									Category
+									{t('category')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'originDepartment' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'originDepartment' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -638,7 +639,7 @@
 										{sortBy === 'status' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par statut"
 								>
-									Status
+									{t('status')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'status' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'status' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -669,7 +670,7 @@
 										{sortBy === 'assignedTo' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par technicien assigné"
 								>
-									Assigned To
+									{t('assigned_to')}
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'assignedTo' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'assignedTo' && orderBy === 'asc'}
 											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
@@ -700,7 +701,7 @@
 										{sortBy === 'priority' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par priorité"
 								>
-									Priority
+									{t('priority')}
 									<!-- Icône de tri -->
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'priority' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'priority' && orderBy === 'asc'}
@@ -735,7 +736,7 @@
 										{sortBy === 'createdAt' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
 									aria-label="Trier par date de création"
 								>
-									Date
+									{t('date')}
 									<!-- Icône de tri -->
 									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'createdAt' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
 										{#if sortBy === 'createdAt' && orderBy === 'asc'}
@@ -754,7 +755,7 @@
 									</span>
 								</button>
 							</th>
-							<th class="px-4 py-3">Action</th>
+							<th class="px-4 py-3">{t('action')}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
