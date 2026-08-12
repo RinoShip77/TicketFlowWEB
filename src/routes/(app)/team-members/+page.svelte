@@ -19,6 +19,20 @@
 	const sortBy   = $derived<SortField>((pageState.url.searchParams.get('sortBy')  as SortField)  ?? 'name');
 	const orderBy  = $derived<SortOrder>((pageState.url.searchParams.get('orderBy') as SortOrder)  ?? 'asc');
 
+	// ── View Mode state (Liste vs Grille) — synchronisé avec l'URL ─────
+	let viewMode = $state<'list' | 'grid'>((pageState.url.searchParams.get('view') as 'grid' | 'list') ?? 'list');
+
+	$effect(() => {
+		const urlView = pageState.url.searchParams.get('view');
+		viewMode = urlView === 'grid' ? 'grid' : 'list';
+	});
+
+	function setViewMode(mode: 'list' | 'grid') {
+		viewMode = mode;
+		const params = buildParams({ view: mode === 'grid' ? 'grid' : null });
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+	}
+
 	// ── Filter state — synchronisé avec l'URL ─────────────────────────
 	let searchQuery       = $state(pageState.url.searchParams.get('search') ?? '');
 	let selectedDepartment = $state(pageState.url.searchParams.get('dept') ?? '');
@@ -268,7 +282,7 @@
 			>
 				<input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
 
-				<!-- Nom complet (optional text input) -->
+				<!-- Nom complet -->
 				<input
 					type="text"
 					name="name"
@@ -388,9 +402,46 @@
 					<path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
 				</svg>
 			</div>
+
+			<!-- View toggle (List vs Grid) -->
+			<div class="inline-flex items-center p-1 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 shadow-xs gap-1 ml-auto">
+				<button
+					type="button"
+					onclick={() => setViewMode('list')}
+					id="btn-view-list"
+					class="p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer
+						{viewMode === 'list'
+							? 'bg-indigo-600 text-white shadow-xs'
+							: 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}"
+					aria-label="Vue liste"
+					aria-pressed={viewMode === 'list'}
+				>
+					<!-- 5 horizontal lines icon -->
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 9.5h16M4 13h16M4 16.5h16M4 20h16" />
+					</svg>
+				</button>
+
+				<button
+					type="button"
+					onclick={() => setViewMode('grid')}
+					id="btn-view-grid"
+					class="p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer
+						{viewMode === 'grid'
+							? 'bg-indigo-600 text-white shadow-xs'
+							: 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}"
+					aria-label="Vue grille"
+					aria-pressed={viewMode === 'grid'}
+				>
+					<!-- 4 rounded squares in 2x2 grid icon -->
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+					</svg>
+				</button>
+			</div>
 		</div>
 
-		<!-- Members Table -->
+		<!-- Members Container (Tableau ou Grille) -->
 		{#if paginatedMembers.length === 0}
 			<div class="py-16 text-center">
 				<svg class="w-10 h-10 text-gray-300 dark:text-zinc-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -399,7 +450,8 @@
 				<p class="text-gray-500 dark:text-zinc-400 text-sm">Aucun membre trouvé.</p>
 				<a href="/team-members/new" class="text-indigo-600 dark:text-indigo-400 text-sm hover:underline mt-1 inline-block">Ajouter un membre →</a>
 			</div>
-		{:else}
+		{:else if viewMode === 'list'}
+			<!-- ── VUE TABLEAU ─────────────────────────────────────────── -->
 			<div class="overflow-x-auto">
 				<table class="w-full text-sm" aria-label="Liste des membres de l'équipe">
 					<thead>
@@ -675,7 +727,7 @@
 									{/if}
 								</td>
 
-								<!-- ── Action Buttons (Mêmes boutons que les tickets : "Ouvrir" + Poubelle) ── -->
+								<!-- ── Action Buttons ── -->
 								<td class="px-4 py-3.5">
 									<div class="flex items-center gap-2">
 										<!-- Voir & Modifier → page détail -->
@@ -713,8 +765,115 @@
 					</tbody>
 				</table>
 			</div>
+		{:else}
+			<!-- ── VUE GRILLE / CARTES ─────────────────────────────────── -->
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+				{#each paginatedMembers as member (member._id ?? member.id)}
+					{@const memberId = member._id ?? member.id}
+					{@const isSelected = selectedIds.includes(memberId)}
 
-			<!-- Pagination Footer -->
+					<div
+						class="relative flex flex-col justify-between p-5 rounded-2xl border bg-white dark:bg-zinc-900 shadow-xs hover:shadow-md transition-all duration-200 group
+							{isSelected
+								? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/20 dark:bg-indigo-950/20'
+								: 'border-gray-200 dark:border-zinc-800/80 hover:border-gray-300 dark:hover:border-zinc-700'}"
+					>
+						<!-- Top row: Checkbox & Badges -->
+						<div>
+							<div class="flex items-center justify-between gap-2 mb-3">
+								<div class="flex items-center gap-2">
+									<input
+										type="checkbox"
+										checked={isSelected}
+										onclick={() => toggleSelect(memberId)}
+										class="w-4 h-4 rounded border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+										aria-label="Sélectionner le membre {member.name}"
+									/>
+									<span class="font-mono text-xs font-semibold text-gray-500 dark:text-zinc-400">
+										L{member.level}
+									</span>
+								</div>
+
+								<div class="flex items-center gap-1.5">
+									<!-- Role badge -->
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+										{member.roleTitle === 'Admin'
+											? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300'
+											: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400'}">
+										{member.roleTitle}
+									</span>
+
+									<!-- Status badge -->
+									{#if member.status === 'Active'}
+										<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400">
+											Active
+										</span>
+									{:else}
+										<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-950/70 text-red-600 dark:text-red-400">
+											Inactive
+										</span>
+									{/if}
+								</div>
+							</div>
+
+							<!-- Member Identity -->
+							<div class="flex items-center gap-3 my-3">
+								<div class="w-12 h-12 rounded-full {getAvatarStyle(member.name)} flex items-center justify-center shrink-0 font-bold text-sm shadow-xs">
+									{getInitials(member.name)}
+								</div>
+								<div class="min-w-0 flex-1">
+									<h3 class="font-bold text-gray-900 dark:text-white text-base leading-snug truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+										<a href="/team-members/{memberId}">
+											{member.name}
+										</a>
+									</h3>
+									<p class="text-xs text-gray-500 dark:text-zinc-400 truncate mt-0.5">{member.email}</p>
+								</div>
+							</div>
+						</div>
+
+						<!-- Bottom section: Department & Actions -->
+						<div class="border-t border-gray-100 dark:border-zinc-800/80 pt-3.5 mt-2 flex items-center justify-between gap-2">
+							<span class="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-300 font-medium text-xs">
+								{member.department}
+							</span>
+
+							<div class="flex items-center gap-2">
+								<a
+									href="/team-members/{memberId}"
+									class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg
+										text-indigo-700 dark:text-indigo-300
+										bg-indigo-50 dark:bg-indigo-950/40
+										hover:bg-indigo-100 dark:hover:bg-indigo-900/50
+										border border-indigo-200 dark:border-indigo-800/50
+										transition-colors"
+									aria-label="Voir et modifier le membre {member.name}"
+								>
+									<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+									</svg>
+									Ouvrir
+								</a>
+
+								<button
+									type="button"
+									onclick={() => confirmDelete(memberId, member.name)}
+									class="text-gray-400 dark:text-zinc-500 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40"
+									aria-label="Supprimer le membre {member.name}"
+								>
+									<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+									</svg>
+								</button>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Pagination Footer -->
+		{#if paginatedMembers.length > 0}
 			<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between gap-4">
 				<!-- Info -->
 				<span class="text-xs text-gray-400 dark:text-zinc-500 shrink-0">
