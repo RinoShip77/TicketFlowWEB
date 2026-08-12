@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types';
+	import { t } from '$lib/i18n.svelte';
 
 	interface Props {
 		data: PageData;
@@ -65,29 +66,25 @@
 	}
 
 	// ── Mode création unique ──────────────────────────────────────
-	let loading = $state(false);
-	let title = $state((form as any)?.title ?? '');
-	let description = $state((form as any)?.description ?? '');
-	let priority = $state((form as any)?.priority ?? '3');
-	let originDepartment = $state((form as any)?.originDepartment ?? '');
-	let assignedTo = $state((form as any)?.assignedTo ?? '');
+	let title            = $state('');
+	let description      = $state('');
+	let priority         = $state('3');
+	let originDepartment = $state('');
+	let assignedTo       = $state('');
+	let loading          = $state(false);
 
 	const fieldErrors = $derived<Record<string, string>>(
-		((form as any)?.action === 'createSingle' || !(form as any)?.action)
-			? (((form as any)?.errors as Record<string, string>) ?? {})
-			: {}
+		(form as any)?.action === 'createSingle' ? ((form as any)?.fieldErrors ?? {}) : {}
 	);
 	const formError = $derived<string | undefined>(
-		((form as any)?.action === 'createSingle' || !(form as any)?.action)
-			? ((form as any)?.formError as string | undefined)
-			: undefined
+		(form as any)?.action === 'createSingle' ? (form as any)?.formError : undefined
 	);
 
 	const priorityOptions = [
-		{ value: '1', label: 'Très faible', color: '#0ea5e9' },
-		{ value: '2', label: 'Faible', color: '#3b82f6' },
-		{ value: '3', label: 'Moyenne', color: '#f59e0b' },
-		{ value: '4', label: 'Haute', color: '#f97316' },
+		{ value: '1', label: 'Basse',   color: '#64748b' },
+		{ value: '2', label: 'Normale', color: '#06b6d4' },
+		{ value: '3', label: 'Moyenne', color: '#eab308' },
+		{ value: '4', label: 'Haute',   color: '#f97316' },
 		{ value: '5', label: 'Critique', color: '#ef4444' }
 	];
 
@@ -100,15 +97,15 @@
 </script>
 
 <svelte:head>
-	<title>Créer un ticket — TicketFlow</title>
-	<meta name="description" content="Créer un ou plusieurs nouveaux tickets de support TicketFlow." />
+	<title>{t('create_ticket_title')} — TicketFlow</title>
+	<meta name="description" content="Créer un ou plusieurs nouveaux billets de support TicketFlow." />
 </svelte:head>
 
 <!-- Page header -->
 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
 	<div>
-		<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Créer un nouveau ticket</h2>
-		<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Ajoutez un ticket individuel ou plusieurs tickets en une seule fois.</p>
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{t('create_ticket_title')}</h2>
+		<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('create_ticket_desc')}</p>
 	</div>
 
 	<a
@@ -118,7 +115,7 @@
 		<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
 			<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
 		</svg>
-		Cancel
+		{t('cancel_btn')}
 	</a>
 </div>
 
@@ -135,7 +132,7 @@
 		<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 			<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
 		</svg>
-		Ticket unique
+		{t('single_ticket')}
 	</button>
 
 	<button
@@ -150,7 +147,7 @@
 		<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 			<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v2.25C15.75 20.77 14.52 22 13 22H4c-1.52 0-2.75-1.23-2.75-2.75V11c0-1.52 1.23-2.75 2.75-2.75h2.25m3 3h9c1.52 0 2.75 1.23 2.75 2.75v8c0 1.52-1.23 2.75-2.75 2.75h-9c-1.52 0-2.75-1.23-2.75-2.75v-8c0-1.52 1.23-2.75 2.75-2.75Z" />
 		</svg>
-		Lot de tickets
+		{t('bulk_tickets')}
 	</button>
 </div>
 
@@ -399,7 +396,7 @@
 			href="/tickets"
 			class="px-5 py-2.5 text-sm font-semibold rounded-lg text-gray-700 dark:text-zinc-300 border border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors duration-150"
 		>
-			Cancel
+			{t('cancel_btn')}
 		</a>
 		<button
 			type="submit"
@@ -411,12 +408,12 @@
 					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z"></path>
 				</svg>
-				Création...
+				Enregistrement…
 			{:else}
 				<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
 				</svg>
-				Créer le ticket
+				{t('nav_create_ticket')}
 			{/if}
 		</button>
 	</div>

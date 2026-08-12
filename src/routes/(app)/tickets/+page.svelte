@@ -188,14 +188,13 @@
 	});
 
 	// ── Helpers ─────────────────────────────────────────────────
-	function statusBadge(status: TicketStatus) {
-		const map: Record<TicketStatus, { label: string; color: string }> = {
-			Open:            { label: 'Open',        color: 'text-blue-600 dark:text-blue-400' },
-			'In progress':   { label: 'In Progress', color: 'text-purple-600 dark:text-purple-400' },
-			Resolved:        { label: 'Resolved',    color: 'text-green-600 dark:text-emerald-400' },
-			Closed:          { label: 'Closed',      color: 'text-red-600 dark:text-red-400' }
-		};
-		return map[status] ?? { label: status, color: 'text-gray-500 dark:text-zinc-400' };
+	function statusBadge(status: TicketStatus | string) {
+		const norm = String(status ?? '').toLowerCase();
+		if (norm === 'open') return { label: t('status_open'), color: 'text-blue-600 dark:text-blue-400' };
+		if (norm === 'in progress' || norm === 'in_progress') return { label: t('status_in_progress'), color: 'text-purple-600 dark:text-purple-400' };
+		if (norm === 'resolved') return { label: t('status_resolved'), color: 'text-green-600 dark:text-emerald-400' };
+		if (norm === 'closed') return { label: t('status_closed'), color: 'text-red-600 dark:text-red-400' };
+		return { label: status, color: 'text-gray-500 dark:text-zinc-400' };
 	}
 
 	/**
@@ -214,7 +213,8 @@
 	}
 
 	function formatDate(iso: string) {
-		return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(iso));
+		const lang = getSettings().language === 'en-CA' ? 'en-CA' : 'fr-CA';
+		return new Intl.DateTimeFormat(lang, { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(iso));
 	}
 
 	const avatarColors = [

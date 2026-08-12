@@ -214,7 +214,7 @@
 </script>
 
 <svelte:head>
-	<title>Team Members — TicketFlow</title>
+	<title>{t('nav_team')} — TicketFlow</title>
 	<meta name="description" content="Gestion des membres de l'équipe et techniciens TicketFlow." />
 </svelte:head>
 
@@ -222,7 +222,7 @@
 
 	<!-- ── Header & CTA Button ──────────────────────────────────────── -->
 	<div class="flex items-center justify-between">
-		<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Team Members</h2>
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{t('nav_team')}</h2>
 		<a
 			href="/team-members/new"
 			id="btn-add-member"
@@ -231,7 +231,7 @@
 			<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
 			</svg>
-			Add Member
+			{t('nav_add_member')}
 		</a>
 	</div>
 
@@ -732,7 +732,7 @@
 										{member.roleTitle === 'Admin'
 											? 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300'
 											: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400'}">
-										{member.roleTitle}
+										{member.roleTitle === 'Admin' ? t('role_admin') : (member.roleTitle === 'Technician' ? t('role_technician') : member.roleTitle)}
 									</span>
 								</td>
 
@@ -745,11 +745,11 @@
 								<td class="px-4 py-3.5">
 									{#if member.status === 'Active'}
 										<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400">
-											Active
+											{t('status_active')}
 										</span>
 									{:else}
 										<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-950/70 text-red-600 dark:text-red-400">
-											Inactive
+											{t('status_inactive')}
 										</span>
 									{/if}
 								</td>
@@ -759,26 +759,23 @@
 									<div class="flex items-center gap-2">
 										<!-- Voir & Modifier → page détail -->
 										<a
-											href="/team-members/{member._id ?? member.id}"
-											class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg
-												text-indigo-700 dark:text-indigo-300
-												bg-indigo-50 dark:bg-indigo-950/40
-												hover:bg-indigo-100 dark:hover:bg-indigo-900/50
-												border border-indigo-200 dark:border-indigo-800/50
-												transition-colors"
-											aria-label="Voir et modifier le membre {member.name}"
+											href="/team-members/{memberId}"
+											id="btn-edit-member-{memberId}"
+											class="px-2.5 py-1 text-xs font-medium rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors inline-flex items-center gap-1"
+											aria-label="Voir ou modifier {member.name}"
 										>
-											<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+											<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+												<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.89 1.149l-2.735.913.913-2.735a4.5 4.5 0 0 1 1.149-1.89L16.862 4.487Zm0 0L19.5 7.125" />
 											</svg>
-											Ouvrir
+											{t('open_btn')}
 										</a>
 
-										<!-- Supprimer -->
+										<!-- Bouton Supprimer (ouvre modal) -->
 										<button
 											type="button"
-											onclick={() => confirmDelete(member._id ?? member.id, member.name)}
-											class="text-gray-400 dark:text-zinc-500 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40"
+											onclick={() => confirmDelete(memberId, member.name)}
+											id="btn-delete-member-{memberId}"
+											class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
 											aria-label="Supprimer le membre {member.name}"
 										>
 											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -827,7 +824,7 @@
 										{member.roleTitle === 'Admin'
 											? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300'
 											: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400'}">
-										{member.roleTitle}
+										{member.roleTitle === 'Admin' ? t('role_admin') : (member.roleTitle === 'Technician' ? t('role_technician') : member.roleTitle)}
 									</span>
 
 									<!-- Status badge -->

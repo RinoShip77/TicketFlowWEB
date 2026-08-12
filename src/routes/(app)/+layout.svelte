@@ -29,15 +29,18 @@
 
 	let mobileMenuOpen = $state(false);
 
-	const user = data.user;
-	const userInitials = user?.name
-		? user.name
-				.split(' ')
-				.map((n) => n[0])
-				.join('')
-				.toUpperCase()
-				.slice(0, 2)
-		: 'U';
+	const user = $derived(data.user);
+	const userId = $derived(user?._id ?? user?.id);
+	const userInitials = $derived(
+		user?.name
+			? user.name
+					.split(' ')
+					.map((n) => n[0])
+					.join('')
+					.toUpperCase()
+					.slice(0, 2)
+			: 'U'
+	);
 
 	const navItems = $derived([
 		{
@@ -190,7 +193,7 @@
 					<svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
 					</svg>
-					Logout
+					{t('nav_logout')}
 				</button>
 			</form>
 		</div>
@@ -235,15 +238,19 @@
 				<div class="h-5 w-px bg-gray-200 dark:bg-zinc-700 hidden sm:block"></div>
 
 				<!-- User Profile Badge -->
-				<div class="flex items-center gap-2.5 cursor-pointer">
+				<a
+					href={userId ? `/team-members/${userId}` : '/team-members'}
+					class="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+					aria-label="Voir la fiche du technicien {user?.name ?? ''}"
+				>
 					<div class="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border-2 border-indigo-200 dark:border-indigo-700 flex items-center justify-center shrink-0 shadow-xs">
 						<span class="text-xs font-bold text-indigo-600 dark:text-indigo-300">{userInitials}</span>
 					</div>
 					<div class="hidden md:block text-right">
 						<p class="text-sm font-semibold text-gray-800 dark:text-zinc-200 leading-tight">{user?.name ?? 'Utilisateur'}</p>
-						<p class="text-xs text-gray-500 dark:text-zinc-400 leading-tight">Technicien</p>
+						<p class="text-xs text-gray-500 dark:text-zinc-400 leading-tight">{getSettings().language === 'en-CA' ? 'Technician' : 'Technicien'}</p>
 					</div>
-				</div>
+				</a>
 			</div>
 		</header>
 

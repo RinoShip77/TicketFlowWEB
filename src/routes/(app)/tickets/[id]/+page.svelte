@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types';
 	import type { TicketStatus, TicketPriority } from '$lib/types';
+	import { t } from '$lib/i18n.svelte';
 
 	interface Props {
 		data: PageData;
@@ -67,12 +68,14 @@
 	});
 
 	// ── Helpers visuels ──────────────────────────────────────────────
-	const statusConfig: Record<TicketStatus, { label: string; color: string; dot: string; bg: string }> = {
-		'Open':        { label: 'Open',        color: 'text-blue-700 dark:text-blue-300',   dot: 'bg-blue-500',   bg: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50' },
-		'In progress': { label: 'In Progress', color: 'text-purple-700 dark:text-purple-300', dot: 'bg-purple-500', bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800/50' },
-		'Resolved':    { label: 'Resolved',    color: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/50' },
-		'Closed':      { label: 'Closed',      color: 'text-red-700 dark:text-red-300',     dot: 'bg-red-500',    bg: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50' }
-	};
+	function getStatusInfo(status: string) {
+		const norm = String(status ?? '').toLowerCase();
+		if (norm === 'open') return { label: t('status_open'), color: 'text-blue-700 dark:text-blue-300', dot: 'bg-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50' };
+		if (norm === 'in progress' || norm === 'in_progress') return { label: t('status_in_progress'), color: 'text-purple-700 dark:text-purple-300', dot: 'bg-purple-500', bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800/50' };
+		if (norm === 'resolved') return { label: t('status_resolved'), color: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/50' };
+		if (norm === 'closed') return { label: t('status_closed'), color: 'text-red-700 dark:text-red-300', dot: 'bg-red-500', bg: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50' };
+		return { label: status, color: 'text-gray-700 dark:text-zinc-300', dot: 'bg-gray-400', bg: 'bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700' };
+	}
 
 	const priorityConfig: Record<number, { label: string; color: string; ring: string; dot: string }> = {
 		1: { label: 'Très faible', color: 'text-sky-600 dark:text-sky-400',      ring: 'ring-sky-400',    dot: '#0ea5e9' },
@@ -124,7 +127,7 @@
 	}
 
 	const ticketShortId = $derived(`#${ticket._id.slice(-6).toUpperCase()}`);
-	const sc = $derived(statusConfig[ticket.status] ?? statusConfig['Open']);
+	const sc = $derived(getStatusInfo(ticket.status));
 	const pc = $derived(priorityConfig[ticket.priority] ?? priorityConfig[3]);
 	const noteCount = $derived(ticket.notes?.length ?? 0);
 </script>

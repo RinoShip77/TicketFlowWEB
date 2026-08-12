@@ -299,20 +299,30 @@
 
 	<!-- ── CARD 4: Profil Technicien ───────────────────────────────── -->
 	{#if user}
-		<div class="bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/50 p-6 flex items-center justify-between transition-colors duration-200">
+		{@const userId = user._id ?? user.id}
+		<a
+			href={userId ? `/team-members/${userId}` : '/team-members'}
+			class="bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100/80 dark:hover:bg-indigo-900/60 rounded-xl border border-indigo-100 dark:border-indigo-900/50 p-6 flex items-center justify-between transition-colors duration-200 cursor-pointer group shadow-2xs hover:shadow-xs"
+			aria-label="Voir la fiche détaillée de {user.name}"
+		>
 			<div class="flex items-center gap-4">
 				<div class="w-12 h-12 rounded-full bg-indigo-600 text-white font-bold text-base flex items-center justify-center shadow-md">
 					{user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
 				</div>
 				<div>
-					<h4 class="font-semibold text-gray-900 dark:text-white text-base">{user.name}</h4>
+					<h4 class="font-semibold text-gray-900 dark:text-white text-base group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+						{user.name}
+						<svg class="w-4 h-4 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+						</svg>
+					</h4>
 					<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{user.email}</p>
 				</div>
 			</div>
 			<span class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
 				{getSettings().language === 'en-CA' ? 'Technician Level' : 'Technicien Niveau'} {user.level}
 			</span>
-		</div>
+		</a>
 	{/if}
 
 </div>

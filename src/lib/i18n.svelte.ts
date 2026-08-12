@@ -64,11 +64,21 @@ export const translations = {
 		members_selected_single: '1 membre sélectionné',
 		members_selected_plural: 'membres sélectionnés',
 
-		// Statuts
+		// Statuts & Rôles
 		status_open: 'Ouvert',
 		status_in_progress: 'En cours',
 		status_resolved: 'Résolu',
 		status_closed: 'Fermé',
+		status_active: 'Actif',
+		status_inactive: 'Inactif',
+		role_admin: 'Administrateur',
+		role_technician: 'Technicien',
+
+		// Création de billet
+		create_ticket_title: 'Créer un nouveau billet',
+		create_ticket_desc: 'Ajoutez un billet individuel ou plusieurs billets en une seule fois.',
+		single_ticket: 'Billet unique',
+		bulk_tickets: 'Lot de billets',
 
 		// Écran Paramètres
 		settings_title: 'Paramètres',
@@ -162,11 +172,21 @@ export const translations = {
 		members_selected_single: '1 member selected',
 		members_selected_plural: 'members selected',
 
-		// Statuts
+		// Statuts & Rôles
 		status_open: 'Open',
 		status_in_progress: 'In Progress',
 		status_resolved: 'Resolved',
 		status_closed: 'Closed',
+		status_active: 'Active',
+		status_inactive: 'Inactive',
+		role_admin: 'Admin',
+		role_technician: 'Technician',
+
+		// Création de billet
+		create_ticket_title: 'Create New Ticket',
+		create_ticket_desc: 'Add an individual ticket or multiple tickets at once.',
+		single_ticket: 'Single Ticket',
+		bulk_tickets: 'Bulk Tickets',
 
 		// Écran Paramètres
 		settings_title: 'Settings',
