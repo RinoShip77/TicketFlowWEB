@@ -918,56 +918,62 @@
 			</div>
 		{/if}
 
-		<!-- Pagination -->
-			{#if data.meta && data.meta.totalPages > 1}
-				<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
-					<!-- Previous -->
-					<button
-						onclick={() => applyFilter({ page: data.meta.currentPage - 1 })}
-						disabled={data.meta.currentPage === 1}
-						class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-					>
-						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-						</svg>
-						Previous
-					</button>
+		<!-- Pagination Footer (Identique à Team Members) -->
+		{#if data.meta && data.meta.totalDocuments > 0}
+			<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between gap-4">
+				<!-- Info compteur de range -->
+				<span class="text-xs text-gray-400 dark:text-zinc-500 shrink-0">
+					{(data.meta.currentPage - 1) * 10 + 1}–{Math.min(data.meta.currentPage * 10, data.meta.totalDocuments)} / {data.meta.totalDocuments} billets
+				</span>
 
-					<!-- Page numbers -->
+				<!-- Boutons de pagination (Chevrons + Numéros de pages) -->
+				{#if data.meta.totalPages > 1}
 					<div class="flex items-center gap-1">
+						<!-- Previous chevron -->
+						<button
+							onclick={() => applyFilter({ page: data.meta.currentPage - 1 })}
+							disabled={data.meta.currentPage === 1}
+							class="flex items-center gap-1 px-2.5 py-1.5 text-sm font-medium rounded-lg text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+							aria-label="Page précédente"
+						>
+							<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+							</svg>
+						</button>
+
+						<!-- Page numbers -->
 						{#each paginationPages as p}
 							{#if p === '...'}
-								<span class="w-8 text-center text-gray-400 dark:text-zinc-600 text-sm">…</span>
+								<span class="w-8 h-8 flex items-center justify-center text-xs text-gray-400 dark:text-zinc-500">…</span>
 							{:else}
 								<button
 									onclick={() => applyFilter({ page: p as number })}
-									class="
-										w-8 h-8 rounded-lg text-sm font-medium transition-colors duration-100
+									class="w-8 h-8 rounded-lg text-sm font-medium transition-colors duration-100
 										{data.meta.currentPage === p
 											? 'bg-indigo-600 text-white font-semibold shadow-xs'
-											: 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100'}
-									"
+											: 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100'}"
 									aria-current={data.meta.currentPage === p ? 'page' : undefined}
 								>
 									{p}
 								</button>
 							{/if}
 						{/each}
-					</div>
 
-					<!-- Next -->
-					<button
-						onclick={() => applyFilter({ page: data.meta.currentPage + 1 })}
-						disabled={!data.meta.hasNext}
-						class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-					>
-						Next
-						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-						</svg>
-					</button>
-				</div>
-			{/if}
+						<!-- Next chevron -->
+						<button
+							onclick={() => applyFilter({ page: data.meta.currentPage + 1 })}
+							disabled={!data.meta.hasNext}
+							class="flex items-center gap-1 px-2.5 py-1.5 text-sm font-medium rounded-lg text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+							aria-label="Page suivante"
+						>
+							<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+							</svg>
+						</button>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </div>
 
