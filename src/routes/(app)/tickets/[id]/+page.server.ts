@@ -167,5 +167,33 @@ export const actions: Actions = {
 		}
 
 		return { action: 'addNote', success: true };
+	},
+
+	// ── Suppression du ticket ──────────────────────────────────────────
+	deleteTicket: async ({ cookies, params }) => {
+		const token = cookies.get('tf_token');
+		if (!token) throw redirect(302, '/login');
+
+		const { id } = params;
+
+		try {
+			await apiFetch(`/api/tickets/${id}`, {
+				method: 'DELETE',
+				token
+			});
+		} catch (err) {
+			if (err instanceof ApiException) {
+				if (err.statusCode === 401) {
+					cookies.delete('tf_token', { path: '/' });
+					cookies.delete('tf_user', { path: '/' });
+					throw redirect(302, '/login');
+				}
+				return fail(err.statusCode, { action: 'deleteTicket', formError: err.message });
+			}
+			return fail(500, { action: 'deleteTicket', formError: 'Erreur lors de la suppression.' });
+		}
+
+		throw redirect(302, '/tickets');
 	}
 };
+
