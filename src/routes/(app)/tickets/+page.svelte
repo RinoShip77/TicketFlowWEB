@@ -188,6 +188,12 @@
 	});
 
 	// ── Helpers ─────────────────────────────────────────────────
+	function handleRowClick(e: MouseEvent, targetUrl: string) {
+		const target = e.target as HTMLElement;
+		if (target.closest('input, button, a, label')) return;
+		goto(targetUrl);
+	}
+
 	function statusBadge(status: TicketStatus | string) {
 		const norm = String(status ?? '').toLowerCase();
 		if (norm === 'open') return { label: t('status_open'), color: 'text-blue-600 dark:text-blue-400' };
@@ -763,7 +769,10 @@
 							{@const sb = statusBadge(ticket.status)}
 							{@const pb = priorityBadge(ticket.priority)}
 							{@const isSelected = selectedIds.includes(ticket._id)}
-							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100 {isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/30' : ''}">
+							<tr
+								onclick={(e) => handleRowClick(e, `/tickets/${ticket._id}`)}
+								class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100 cursor-pointer {isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/30' : ''}"
+							>
 								<!-- Checkbox Select One -->
 								<td class="px-3 py-3.5 text-center">
 									<input
@@ -778,7 +787,7 @@
 									#{ticket._id.slice(-4)}
 								</td>
 								<td class="px-4 py-3.5 max-w-[180px]">
-									<span class="text-gray-800 dark:text-zinc-200 font-medium line-clamp-1">{ticket.title}</span>
+									<span class="text-gray-800 dark:text-zinc-200 font-medium line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{ticket.title}</span>
 								</td>
 								<td class="px-4 py-3.5 hidden md:table-cell">
 									<span class="text-gray-500 dark:text-zinc-400 text-xs">{ticket.originDepartment ?? '—'}</span>
@@ -817,10 +826,10 @@
 
 								<td class="px-4 py-3.5">
 									<div class="flex items-center gap-2">
-										<!-- Voir & Modifier → même page détail -->
+										<!-- Voir & Modifier → même page détail (Affiché sur mobile, masqué sur ordinateur) -->
 										<a
 											href="/tickets/{ticket._id}"
-											class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg
+											class="inline-flex md:hidden items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg
 												text-indigo-700 dark:text-indigo-300
 												bg-indigo-50 dark:bg-indigo-950/40
 												hover:bg-indigo-100 dark:hover:bg-indigo-900/50
@@ -831,7 +840,7 @@
 											<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
 												<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
 											</svg>
-											Ouvrir
+											{t('open_btn')}
 										</a>
 
 										<button

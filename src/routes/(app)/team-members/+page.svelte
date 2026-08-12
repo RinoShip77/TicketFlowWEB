@@ -114,6 +114,12 @@
 		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
 	}
 
+	function handleRowClick(e: MouseEvent, targetUrl: string) {
+		const target = e.target as HTMLElement;
+		if (target.closest('input, button, a, label')) return;
+		goto(targetUrl);
+	}
+
 	// ── Avatar / initiales ─────────────────────────────────────────────
 	const avatarStyles = [
 		'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300',
@@ -689,7 +695,10 @@
 						{#each paginatedMembers as member (member._id)}
 							{@const memberId = member._id ?? member.id}
 							{@const isSelected = selectedIds.includes(memberId)}
-							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100 {isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/30' : ''}">
+							<tr
+								onclick={(e) => handleRowClick(e, `/team-members/${memberId}`)}
+								class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100 cursor-pointer {isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/30' : ''}"
+							>
 
 								<!-- Case à cocher individuelle -->
 								<td class="px-4 py-3.5 text-center">
@@ -710,7 +719,7 @@
 											{getInitials(member.name)}
 										</div>
 										<div>
-											<p class="font-medium text-gray-900 dark:text-zinc-100 leading-tight">{member.name}</p>
+											<p class="font-medium text-gray-900 dark:text-zinc-100 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{member.name}</p>
 											<p class="text-xs text-gray-400 dark:text-zinc-500 leading-tight mt-0.5">{member.email}</p>
 										</div>
 									</div>
@@ -757,11 +766,11 @@
 								<!-- ── Action Buttons ── -->
 								<td class="px-4 py-3.5">
 									<div class="flex items-center gap-2">
-										<!-- Voir & Modifier → page détail -->
+										<!-- Voir & Modifier → page détail (Affiché sur mobile, masqué sur ordinateur) -->
 										<a
 											href="/team-members/{memberId}"
 											id="btn-edit-member-{memberId}"
-											class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg
+											class="inline-flex md:hidden items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg
 												text-indigo-700 dark:text-indigo-300
 												bg-indigo-50 dark:bg-indigo-950/40
 												hover:bg-indigo-100 dark:hover:bg-indigo-900/50
