@@ -245,17 +245,17 @@
 			.slice(0, 2);
 	}
 
-	const statusOptions: { value: string; label: string }[] = [
-		{ value: '', label: 'All Statuses' },
-		{ value: 'Open', label: 'Open' },
-		{ value: 'In progress', label: 'In Progress' },
-		{ value: 'Resolved', label: 'Resolved' },
-		{ value: 'Closed', label: 'Closed' }
-	];
+	const statusOptions = $derived<{ value: string; label: string }[]>([
+		{ value: '', label: t('all_statuses') },
+		{ value: 'Open', label: t('status_open') },
+		{ value: 'In progress', label: t('status_in_progress') },
+		{ value: 'Resolved', label: t('status_resolved') },
+		{ value: 'Closed', label: t('status_closed') }
+	]);
 </script>
 
 <svelte:head>
-	<title>All Tickets — TicketFlow</title>
+	<title>{t('nav_tickets')} — TicketFlow</title>
 	<meta name="description" content="Liste complète des tickets de support TicketFlow avec filtres et pagination." />
 </svelte:head>
 
@@ -263,7 +263,7 @@
 
 	<!-- ── Header ──────────────────────────────────────────────────── -->
 	<div class="flex items-center justify-between">
-		<h2 class="text-xl font-bold text-gray-900 dark:text-white">All Tickets</h2>
+		<h2 class="text-xl font-bold text-gray-900 dark:text-white">{t('nav_tickets')}</h2>
 		<a
 			href="/tickets/new"
 			id="btn-create-ticket-list"
@@ -272,7 +272,7 @@
 			<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
 			</svg>
-			Create Ticket
+			{t('nav_create_ticket')}
 		</a>
 	</div>
 
@@ -425,7 +425,7 @@
 					type="text"
 					bind:value={searchValue}
 					oninput={onSearchInput}
-					placeholder="Search..."
+					placeholder={t('search_placeholder')}
 					id="ticket-search"
 					class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
 				/>
@@ -451,7 +451,7 @@
 			<!-- Items per page selector -->
 			<div class="relative">
 				<select
-					value={settings.itemsPerPage}
+					value={String(settings.itemsPerPage ?? 10)}
 					onchange={(e) => {
 						const val = parseInt((e.target as HTMLSelectElement).value, 10) as any;
 						updateSettings({ itemsPerPage: val });

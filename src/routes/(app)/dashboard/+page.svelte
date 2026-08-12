@@ -6,6 +6,7 @@
 	import { getResolvedTheme } from '$lib/theme.svelte';
 	import { getSettings, initSettings } from '$lib/settings.svelte';
 	import { playUrgentTicketAlert } from '$lib/sound';
+	import { t } from '$lib/i18n.svelte';
 
 	interface Props {
 		data: PageData;
@@ -14,7 +15,7 @@
 	let { data }: Props = $props();
 
 	const { stats, tickets, user } = data;
-	const firstName = user?.name?.split(' ')[0] ?? 'là';
+	const firstName = user?.name?.split(' ')[0] ?? (getSettings().language === 'en-CA' ? 'there' : 'là');
 
 	const resolvedTheme = $derived(getResolvedTheme());
 	const settings = $derived(getSettings());
@@ -44,10 +45,10 @@
 	// ── Status badge ────────────────────────────────────────────────
 	function statusBadge(status: TicketStatus) {
 		const map: Record<TicketStatus, { label: string; color: string }> = {
-			Open:          { label: 'Open',        color: 'text-blue-600 dark:text-blue-400' },
-			'In progress': { label: 'In Progress', color: 'text-purple-600 dark:text-purple-400' },
-			Resolved:      { label: 'Resolved',    color: 'text-green-600 dark:text-emerald-400' },
-			Closed:        { label: 'Closed',      color: 'text-red-600 dark:text-red-400' }
+			Open:          { label: t('status_open'),        color: 'text-blue-600 dark:text-blue-400' },
+			'In progress': { label: t('status_in_progress'), color: 'text-purple-600 dark:text-purple-400' },
+			Resolved:      { label: t('status_resolved'),    color: 'text-emerald-600 dark:text-emerald-400' },
+			Closed:        { label: t('status_closed'),      color: 'text-red-600 dark:text-red-400' }
 		};
 		return map[status] ?? { label: status, color: 'text-gray-500 dark:text-zinc-400' };
 	}
@@ -151,25 +152,25 @@
 		if (!stats) return [];
 		return [
 			{
-				label: 'Total Tickets',
+				label: t('total_tickets'),
 				value: stats.overview.total.toLocaleString(),
 				icon: '🎫',
 				iconBg: 'bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50'
 			},
 			{
-				label: 'Open Tickets',
+				label: t('open_tickets'),
 				value: stats.overview.open.toLocaleString(),
 				icon: '👤',
 				iconBg: 'bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50'
 			},
 			{
-				label: 'In Progress',
+				label: t('in_progress_tickets'),
 				value: stats.overview.inProgress.toLocaleString(),
 				icon: '⏱',
 				iconBg: 'bg-amber-50 dark:bg-amber-950/50 border border-amber-100 dark:border-amber-900/50'
 			},
 			{
-				label: 'Resolved',
+				label: t('resolved_tickets'),
 				value: stats.overview.resolutionRate + '%',
 				icon: '✓',
 				iconBg: 'bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50'
@@ -179,7 +180,7 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard — TicketFlow</title>
+	<title>{t('nav_dashboard')} — TicketFlow</title>
 	<meta name="description" content="Tableau de bord TicketFlow : statistiques et aperçu des tickets." />
 </svelte:head>
 
@@ -188,8 +189,8 @@
 	<!-- ── Welcome + CTA ──────────────────────────────────────────── -->
 	<div class="flex items-start justify-between">
 		<div>
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Welcome {firstName} 👋</h2>
-			<p class="text-gray-500 dark:text-zinc-400 text-sm mt-1">Here's your support performance overview.</p>
+			<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{t('welcome')} {firstName} 👋</h2>
+			<p class="text-gray-500 dark:text-zinc-400 text-sm mt-1">{t('dashboard_sub')}</p>
 		</div>
 		<a
 			href="/tickets/new"
@@ -199,7 +200,7 @@
 			<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
 			</svg>
-			Create Ticket
+			{t('nav_create_ticket')}
 		</a>
 	</div>
 
@@ -226,8 +227,8 @@
 		<!-- Line Chart: Ticket Activity -->
 		<div class="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 p-5 shadow-sm transition-colors">
 			<div class="flex items-center justify-between mb-4">
-				<h3 class="font-semibold text-gray-900 dark:text-white">Ticket Activity</h3>
-				<span class="text-xs text-gray-400 dark:text-zinc-500">Last 30 Days</span>
+				<h3 class="font-semibold text-gray-900 dark:text-white">{t('ticket_activity')}</h3>
+				<span class="text-xs text-gray-400 dark:text-zinc-500">{t('last_30_days')}</span>
 			</div>
 
 			{#if stats}
@@ -261,23 +262,23 @@
 				<!-- Legend -->
 				<div class="flex items-center gap-5 mt-3">
 					<span class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-						<span class="w-5 h-0.5 bg-emerald-500 rounded inline-block"></span> Total Tickets
+						<span class="w-5 h-0.5 bg-emerald-500 rounded inline-block"></span> {t('total_tickets')}
 					</span>
 					<span class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-						<span class="w-5 h-0.5 bg-amber-500 rounded inline-block"></span> Resolved Tickets
+						<span class="w-5 h-0.5 bg-amber-500 rounded inline-block"></span> {t('resolved_tickets')}
 					</span>
 					<span class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-						<span class="w-5 h-0.5 bg-purple-500 rounded inline-block"></span> Pending Tickets
+						<span class="w-5 h-0.5 bg-purple-500 rounded inline-block"></span> {t('in_progress_tickets')}
 					</span>
 				</div>
 			{:else}
-				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">Données indisponibles</p>
+				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">{t('no_tickets_found')}</p>
 			{/if}
 		</div>
 
 		<!-- Donut Chart: Category Analytics -->
 		<div class="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 p-5 shadow-sm transition-colors">
-			<h3 class="font-semibold text-gray-900 dark:text-white mb-4">Category Analytics</h3>
+			<h3 class="font-semibold text-gray-900 dark:text-white mb-4">{t('category')}</h3>
 
 			{#if stats && donutDepts.length > 0}
 				{@const depts = donutDepts}
@@ -293,7 +294,7 @@
 						<text x="70" y="66" text-anchor="middle" font-size="11" font-weight="700" fill={resolvedTheme === 'dark' ? '#f4f4f5' : '#111827'}>
 							{stats.overview.resolutionRate}%
 						</text>
-						<text x="70" y="78" text-anchor="middle" font-size="7" fill={resolvedTheme === 'dark' ? '#71717a' : '#9ca3af'}>Resolved</text>
+						<text x="70" y="78" text-anchor="middle" font-size="7" fill={resolvedTheme === 'dark' ? '#71717a' : '#9ca3af'}>{t('status_resolved')}</text>
 					</svg>
 				</div>
 
@@ -308,7 +309,7 @@
 					{/each}
 				</div>
 			{:else}
-				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">Données indisponibles</p>
+				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">{t('no_tickets_found')}</p>
 			{/if}
 		</div>
 	</div>
@@ -319,8 +320,8 @@
 		<!-- Ticket List preview -->
 		<div class="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden transition-colors">
 			<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-zinc-800">
-				<h3 class="font-semibold text-gray-900 dark:text-white">Ticket List</h3>
-				<a href="/tickets" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">View All</a>
+				<h3 class="font-semibold text-gray-900 dark:text-white">{t('nav_tickets')}</h3>
+				<a href="/tickets" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">{t('open_btn')}</a>
 			</div>
 
 			{#if tickets.length > 0}
@@ -328,12 +329,12 @@
 					<table class="w-full text-sm" aria-label="Aperçu des tickets">
 						<thead>
 							<tr class="text-left text-xs font-medium text-gray-400 dark:text-zinc-500 border-b border-gray-100 dark:border-zinc-800">
-								<th class="px-5 py-3">Ticket ID</th>
-								<th class="px-4 py-3">Subject</th>
-								<th class="px-4 py-3">Status</th>
-								<th class="px-4 py-3 hidden md:table-cell">Assigned To</th>
-								<th class="px-4 py-3 hidden lg:table-cell">Date</th>
-								<th class="px-4 py-3">Action</th>
+								<th class="px-5 py-3">{t('ticket_id')}</th>
+								<th class="px-4 py-3">{t('subject')}</th>
+								<th class="px-4 py-3">{t('status')}</th>
+								<th class="px-4 py-3 hidden md:table-cell">{t('assigned_to')}</th>
+								<th class="px-4 py-3 hidden lg:table-cell">{t('date')}</th>
+								<th class="px-4 py-3">{t('action')}</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
@@ -358,7 +359,7 @@
 												<span class="text-gray-700 dark:text-zinc-300 text-xs truncate max-w-[80px]">{ticket.assignedTo.name.split(' ')[0]}</span>
 											</div>
 										{:else}
-											<span class="text-gray-400 dark:text-zinc-600 text-xs">—</span>
+											<span class="text-gray-400 dark:text-zinc-600 text-xs">{t('unassigned')}</span>
 										{/if}
 									</td>
 									<td class="px-4 py-3 hidden lg:table-cell text-xs text-gray-400 dark:text-zinc-500">
@@ -390,15 +391,15 @@
 					</table>
 				</div>
 			{:else}
-				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">Données indisponibles</p>
+				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">{t('no_tickets_found')}</p>
 			{/if}
 		</div>
 
 		<!-- Recent Activities -->
 		<div class="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden transition-colors">
 			<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-zinc-800">
-				<h3 class="font-semibold text-gray-900 dark:text-white">Recent Activities</h3>
-				<a href="/tickets" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">View All</a>
+				<h3 class="font-semibold text-gray-900 dark:text-white">{getSettings().language === 'en-CA' ? 'Recent Activities' : 'Activités récentes'}</h3>
+				<a href="/tickets" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">{t('open_btn')}</a>
 			</div>
 
 			{#if tickets.length > 0}
@@ -420,16 +421,16 @@
 
 							<div class="min-w-0 flex-1">
 								<p class="text-xs text-gray-800 dark:text-zinc-200 leading-snug">
-									{ticket.assignedTo?.name ?? 'Système'} updated status to
+									{ticket.assignedTo?.name ?? (getSettings().language === 'en-CA' ? 'System' : 'Système')} {getSettings().language === 'en-CA' ? 'updated status to' : 'a mis à jour le statut à'}
 									<span class="font-semibold {sb.color}">{sb.label}</span>
 								</p>
-								<p class="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">Ticket #{ticket._id.slice(-4)} • {formatDate(ticket.updatedAt)}</p>
+								<p class="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{t('ticket_id')} #{ticket._id.slice(-4)} • {formatDate(ticket.updatedAt)}</p>
 							</div>
 						</div>
 					{/each}
 				</div>
 			{:else}
-				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">Données indisponibles</p>
+				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">{t('no_tickets_found')}</p>
 			{/if}
 		</div>
 

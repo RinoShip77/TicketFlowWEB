@@ -138,22 +138,22 @@
 				<svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
 				</svg>
-				Notifications & Alertes
+				{t('notifs_title')}
 			</h3>
-			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Gérez la fréquence et le mode de vos avertissements en temps réel.</p>
+			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('notifs_desc')}</p>
 		</div>
 
 		<!-- Email Notifications -->
 		<div class="flex items-center justify-between py-1">
 			<div>
 				<div class="flex items-center gap-2">
-					<label for="toggle-email-notifs" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Notifications par courriel</label>
+					<label for="toggle-email-notifs" class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('email_notifs_label')}</label>
 					<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
-						Prochainement
+						{t('upcoming')}
 					</span>
 				</div>
 				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-					Recevoir un e-mail automatique à chaque attribution ou modification de vos billets (intégration SMTP).
+					{t('email_notifs_desc')}
 				</p>
 			</div>
 			<button
@@ -178,7 +178,7 @@
 		<div class="flex items-center justify-between py-1">
 			<div>
 				<div class="flex items-center gap-2">
-					<label for="toggle-sound-alerts" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Alertes sonores (Tickets Urgents P4/P5)</label>
+					<label for="toggle-sound-alerts" class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('sound_alerts_label')}</label>
 					{#if settings.soundAlerts}
 						<button
 							type="button"
@@ -188,12 +188,12 @@
 							<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.287a6 6 0 0 1 0 8.426M12 6.75v10.5l-4.5-3.75H4.5v-3h3L12 6.75Z" />
 							</svg>
-							Tester le son
+							{t('test_sound')}
 						</button>
 					{/if}
 				</div>
 				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-					Émettre un signal sonore synthétisé Web Audio lorsqu'un ticket critique (P4/P5) nécessite votre attention.
+					{t('sound_alerts_desc')}
 				</p>
 			</div>
 			<button
@@ -218,16 +218,16 @@
 		<div class="flex items-center justify-between py-1">
 			<div>
 				<div class="flex items-center gap-2">
-					<label for="toggle-auto-refresh" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Rafraîchissement automatique (60s)</label>
+					<label for="toggle-auto-refresh" class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('auto_refresh_label')}</label>
 					{#if settings.autoRefresh}
 						<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300">
 							<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-							Actif
+							{t('active')}
 						</span>
 					{/if}
 				</div>
 				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-					Actualiser automatiquement les données du tableau de bord et des billets toutes les 60 secondes en arrière-plan.
+					{t('auto_refresh_desc')}
 				</p>
 			</div>
 			<button
@@ -254,16 +254,16 @@
 				<svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.5m10.5-12.25c-1.332 2.335-3.003 4.455-4.966 6.27" />
 				</svg>
-				Langue & Affichage
+				{t('lang_title')}
 			</h3>
-			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Paramétrez la langue régionale et la taille des pages de résultats.</p>
+			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('lang_desc')}</p>
 		</div>
 
 		<!-- Langue -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label for="select-language" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Langue d'affichage</label>
-				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Langue principale de l'interface régionale.</p>
+				<label for="select-language" class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('lang_label')}</label>
+				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('lang_subdesc')}</p>
 			</div>
 			<select
 				id="select-language"
@@ -281,8 +281,8 @@
 		<!-- Éléments par page -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label for="select-items-per-page" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Éléments par page</label>
-				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Nombre de billets et membres affichés par page (10, 25 ou 50).</p>
+				<label for="select-items-per-page" class="text-sm font-medium text-gray-800 dark:text-zinc-200">{t('items_per_page_label')}</label>
+				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{t('items_per_page_desc')}</p>
 			</div>
 			<select
 				id="select-items-per-page"
@@ -290,9 +290,9 @@
 				onchange={(e) => saveSetting('itemsPerPage', parseInt((e.target as HTMLSelectElement).value, 10) as any)}
 				class="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
 			>
-				<option value="10">10 éléments</option>
-				<option value="25">25 éléments</option>
-				<option value="50">50 éléments</option>
+				<option value="10">10 / page</option>
+				<option value="25">25 / page</option>
+				<option value="50">50 / page</option>
 			</select>
 		</div>
 	</div>
@@ -310,7 +310,7 @@
 				</div>
 			</div>
 			<span class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-				Technicien Niveau {user.level}
+				{getSettings().language === 'en-CA' ? 'Technician Level' : 'Technicien Niveau'} {user.level}
 			</span>
 		</div>
 	{/if}

@@ -16,6 +16,16 @@ export const translations = {
 		nav_add_member: 'Ajouter un membre',
 		nav_logout: 'Déconnexion',
 
+		// Dashboard
+		welcome: 'Bienvenue',
+		dashboard_sub: 'Voici un aperçu de vos performances de support.',
+		total_tickets: 'BILLETS TOTAUX',
+		open_tickets: 'BILLETS OUVERTS',
+		in_progress_tickets: 'EN COURS',
+		resolved_tickets: 'RÉSOLUS',
+		ticket_activity: 'Activité des billets',
+		last_30_days: '30 derniers jours',
+
 		// Entêtes de tableau & Filtres
 		search_placeholder: 'Rechercher...',
 		search_members_placeholder: 'Rechercher des membres...',
@@ -39,6 +49,7 @@ export const translations = {
 		date: 'Date',
 		unassigned: 'Non assigné',
 		no_tickets_found: 'Aucun billet trouvé.',
+		create_first_ticket: 'Créer le premier billet →',
 		tickets_selected_single: '1 billet sélectionné',
 		tickets_selected_plural: 'billets sélectionnés',
 		apply_to_tickets: 'Appliquer aux billets',
@@ -103,6 +114,16 @@ export const translations = {
 		nav_add_member: 'Add Member',
 		nav_logout: 'Sign out',
 
+		// Dashboard
+		welcome: 'Welcome',
+		dashboard_sub: "Here's your support performance overview.",
+		total_tickets: 'TOTAL TICKETS',
+		open_tickets: 'OPEN TICKETS',
+		in_progress_tickets: 'IN PROGRESS',
+		resolved_tickets: 'RESOLVED',
+		ticket_activity: 'Ticket Activity',
+		last_30_days: 'Last 30 Days',
+
 		// Entêtes de tableau & Filtres
 		search_placeholder: 'Search...',
 		search_members_placeholder: 'Search members...',
@@ -126,6 +147,7 @@ export const translations = {
 		date: 'Date',
 		unassigned: 'Unassigned',
 		no_tickets_found: 'No tickets found.',
+		create_first_ticket: 'Create first ticket →',
 		tickets_selected_single: '1 ticket selected',
 		tickets_selected_plural: 'tickets selected',
 		apply_to_tickets: 'Apply to tickets',

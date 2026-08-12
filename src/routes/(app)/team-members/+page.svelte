@@ -388,7 +388,7 @@
 					type="text"
 					bind:value={searchQuery}
 					oninput={onSearchInput}
-					placeholder="Search members..."
+					placeholder={t('search_members_placeholder')}
 					id="search-members"
 					class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
 				/>
@@ -402,7 +402,7 @@
 					id="filter-department"
 					class="appearance-none pl-3 pr-8 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-colors"
 				>
-					<option value="">All Departments</option>
+					<option value="">{t('all_departments')}</option>
 					{#each departments as dept}
 						<option value={dept}>{dept}</option>
 					{/each}
@@ -415,7 +415,7 @@
 			<!-- Items per page selector -->
 			<div class="relative">
 				<select
-					value={settings.itemsPerPage}
+					value={String(settings.itemsPerPage ?? 10)}
 					onchange={(e) => updateSettings({ itemsPerPage: parseInt((e.target as HTMLSelectElement).value, 10) as any })}
 					id="select-team-items-per-page"
 					aria-label="Nombre d'éléments par page"
