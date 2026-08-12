@@ -14,8 +14,10 @@
 
 	let { data }: Props = $props();
 
-	const { stats, tickets, user } = data;
-	const firstName = user?.name?.split(' ')[0] ?? (getSettings().language === 'en-CA' ? 'there' : 'là');
+	const stats = $derived(data.stats);
+	const tickets = $derived(data.tickets ?? []);
+	const user = $derived(data.user);
+	const firstName = $derived(data.user?.name ? data.user.name.split(' ')[0] : '');
 
 	const resolvedTheme = $derived(getResolvedTheme());
 	const settings = $derived(getSettings());
@@ -189,7 +191,7 @@
 	<!-- ── Welcome + CTA ──────────────────────────────────────────── -->
 	<div class="flex items-start justify-between">
 		<div>
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{t('welcome')} {firstName} 👋</h2>
+			<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{t('welcome')}{firstName ? ` ${firstName}` : ''} 👋</h2>
 			<p class="text-gray-500 dark:text-zinc-400 text-sm mt-1">{t('dashboard_sub')}</p>
 		</div>
 		<a

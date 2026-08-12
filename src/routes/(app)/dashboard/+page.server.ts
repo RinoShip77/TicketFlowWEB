@@ -33,8 +33,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		return {
 			stats,
 			tickets: ticketsResponse.data,
-			meta: ticketsResponse.meta,
-			user: null // user comes from layout data
+			meta: ticketsResponse.meta
 		};
 	} catch (err) {
 		if (err instanceof ApiException && err.statusCode === 401) {
