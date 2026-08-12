@@ -399,7 +399,7 @@
 			href="/tickets"
 			class="px-5 py-2.5 text-sm font-semibold rounded-lg text-gray-700 dark:text-zinc-300 border border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors duration-150"
 		>
-			Sauvegarder Brouillon
+			Cancel
 		</a>
 		<button
 			type="submit"
