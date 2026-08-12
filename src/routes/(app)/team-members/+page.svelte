@@ -25,7 +25,12 @@
 	let currentPage       = $state(Number(pageState.url.searchParams.get('page') ?? '1'));
 	const pageSize = 10;
 
-	// Modal de suppression
+	// ── Selection & Bulk actions ──────────────────────────────────────
+	let selectedIds             = $state<string[]>([]);
+	let isBulkLoading           = $state(false);
+	let isBulkDeletingModalOpen = $state(false);
+
+	// Modal de suppression unique
 	let isDeleteModalOpen = $state(false);
 	let deleteTargetId    = $state<string | null>(null);
 	let deleteTargetName  = $state('');
@@ -141,6 +146,32 @@
 		sortedMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 	);
 
+	// ── Logic Sélection multiple (cases à cocher) ─────────────────────
+	const allSelected = $derived(
+		paginatedMembers.length > 0 && paginatedMembers.every((m) => selectedIds.includes(m._id ?? m.id))
+	);
+
+	function toggleSelectAll() {
+		const pageMemberIds = paginatedMembers.map((m) => m._id ?? m.id);
+		if (allSelected) {
+			selectedIds = selectedIds.filter((id) => !pageMemberIds.includes(id));
+		} else {
+			selectedIds = Array.from(new Set([...selectedIds, ...pageMemberIds]));
+		}
+	}
+
+	function toggleSelect(id: string) {
+		if (selectedIds.includes(id)) {
+			selectedIds = selectedIds.filter((i) => i !== id);
+		} else {
+			selectedIds = [...selectedIds, id];
+		}
+	}
+
+	function clearSelection() {
+		selectedIds = [];
+	}
+
 	// Pagination pages
 	const paginationPages = $derived.by(() => {
 		const total = totalPages;
@@ -180,6 +211,145 @@
 			Add Member
 		</a>
 	</div>
+
+	<!-- ── Barre d'actions en lot (si au moins 1 membre sélectionné) ── -->
+	{#if selectedIds.length > 0}
+		<div class="bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800/60 rounded-xl p-4 space-y-3 animate-fade-in shadow-sm">
+			<div class="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-200/60 dark:border-indigo-800/40 pb-3">
+				<div class="flex items-center gap-2.5">
+					<span class="inline-flex items-center justify-center bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+						{selectedIds.length}
+					</span>
+					<span class="text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+						{selectedIds.length === 1 ? '1 membre sélectionné' : `${selectedIds.length} membres sélectionnés`}
+					</span>
+				</div>
+
+				<div class="flex items-center gap-2">
+					<button
+						type="button"
+						onclick={() => isBulkDeletingModalOpen = true}
+						disabled={isBulkLoading}
+						id="btn-bulk-delete-members"
+						class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 shadow-xs inline-flex items-center gap-1.5"
+					>
+						<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+						</svg>
+						Supprimer ({selectedIds.length})
+					</button>
+
+					<button
+						type="button"
+						onclick={clearSelection}
+						class="p-1.5 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors"
+						aria-label="Annuler la sélection"
+					>
+						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+			</div>
+
+			<!-- Formulaire de modification groupée -->
+			<form
+				method="POST"
+				action="?/bulkUpdate"
+				use:enhance={() => {
+					isBulkLoading = true;
+					return async ({ update }) => {
+						await update();
+						isBulkLoading = false;
+						selectedIds = [];
+					};
+				}}
+				class="flex flex-wrap items-center gap-2.5"
+			>
+				<input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
+
+				<!-- Nom complet (optional text input) -->
+				<input
+					type="text"
+					name="name"
+					placeholder="Nouveau nom (inchangé)"
+					disabled={isBulkLoading}
+					class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-indigo-300 dark:placeholder:text-zinc-600 max-w-[180px]"
+				/>
+
+				<!-- Département -->
+				<select
+					name="department"
+					id="bulk-dept-select"
+					aria-label="Changer le département en lot"
+					disabled={isBulkLoading}
+					class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+				>
+					<option value="">Département (inchangé)</option>
+					{#each departments as dept}
+						<option value={dept}>{dept}</option>
+					{/each}
+				</select>
+
+				<!-- Rôle -->
+				<select
+					name="roleTitle"
+					id="bulk-role-select"
+					aria-label="Changer le rôle en lot"
+					disabled={isBulkLoading}
+					class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+				>
+					<option value="">Rôle (inchangé)</option>
+					<option value="Technician">Technician</option>
+					<option value="Admin">Admin</option>
+				</select>
+
+				<!-- Niveau -->
+				<select
+					name="level"
+					id="bulk-level-select"
+					aria-label="Changer le niveau en lot"
+					disabled={isBulkLoading}
+					class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+				>
+					<option value="">Niveau (inchangé)</option>
+					<option value="1">L1 — Junior</option>
+					<option value="2">L2 — Senior</option>
+					<option value="3">L3 — Admin</option>
+				</select>
+
+				<!-- Statut -->
+				<select
+					name="status"
+					id="bulk-status-select"
+					aria-label="Changer le statut en lot"
+					disabled={isBulkLoading}
+					class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+				>
+					<option value="">Statut (inchangé)</option>
+					<option value="Active">Active</option>
+					<option value="Inactive">Inactive</option>
+				</select>
+
+				<button
+					type="submit"
+					disabled={isBulkLoading}
+					id="btn-apply-bulk-members"
+					class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors disabled:opacity-50 shadow-xs inline-flex items-center gap-1.5"
+				>
+					{#if isBulkLoading}
+						<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z"></path>
+						</svg>
+						Enregistrement…
+					{:else}
+						Appliquer la modification ({selectedIds.length})
+					{/if}
+				</button>
+			</form>
+		</div>
+	{/if}
 
 	<!-- ── Table Container ─────────────────────────────────────────── -->
 	<div class="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm transition-colors duration-200">
@@ -234,6 +404,18 @@
 				<table class="w-full text-sm" aria-label="Liste des membres de l'équipe">
 					<thead>
 						<tr class="text-left text-xs font-medium text-gray-400 dark:text-zinc-500 border-b border-gray-100 dark:border-zinc-800">
+
+							<!-- ── Case à cocher : Tout sélectionner ─────────────── -->
+							<th class="px-4 py-3.5 w-10 text-center">
+								<input
+									type="checkbox"
+									checked={allSelected}
+									onclick={toggleSelectAll}
+									id="select-all-members"
+									class="w-4 h-4 rounded-sm border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+									aria-label="Sélectionner tous les membres de la page"
+								/>
+							</th>
 
 							<!-- ── Colonne triable : Member (name) ─────────────────── -->
 							<th
@@ -426,7 +608,21 @@
 					</thead>
 					<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
 						{#each paginatedMembers as member (member._id)}
-							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100">
+							{@const memberId = member._id ?? member.id}
+							{@const isSelected = selectedIds.includes(memberId)}
+							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100 {isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/30' : ''}">
+
+								<!-- Case à cocher individuelle -->
+								<td class="px-4 py-3.5 text-center">
+									<input
+										type="checkbox"
+										checked={isSelected}
+										onclick={() => toggleSelect(memberId)}
+										class="w-4 h-4 rounded-sm border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+										aria-label="Sélectionner le membre {member.name}"
+									/>
+								</td>
+
 								<!-- Member (Avatar + Name + Email) -->
 								<td class="px-5 py-3.5">
 									<div class="flex items-center gap-3">
@@ -575,7 +771,7 @@
 
 </div>
 
-<!-- ── Modal de confirmation de suppression ────────────────────────── -->
+<!-- ── Modal de confirmation de suppression unique ─────────────────── -->
 {#if isDeleteModalOpen}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
@@ -635,6 +831,74 @@
 						Suppression…
 					{:else}
 						Supprimer
+					{/if}
+				</button>
+			</form>
+		</div>
+	</div>
+{/if}
+
+<!-- ── Modal de confirmation de suppression en lot ──────────────────── -->
+{#if isBulkDeletingModalOpen}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-bulk-delete-title"
+	>
+		<div class="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-6 space-y-4">
+			<div class="flex items-center gap-3 text-red-600 dark:text-red-400">
+				<div class="p-2 rounded-full bg-red-100 dark:bg-red-950/60 shrink-0">
+					<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+					</svg>
+				</div>
+				<h3 id="modal-bulk-delete-title" class="text-lg font-bold text-gray-900 dark:text-white">Confirmer la suppression en lot</h3>
+			</div>
+
+			<p class="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+				Êtes-vous sûr de vouloir supprimer définitivement <strong class="text-gray-900 dark:text-zinc-200">{selectedIds.length} membre(s)</strong> ? Cette action est irréversible.
+			</p>
+
+			<form
+				method="POST"
+				action="?/bulkDelete"
+				use:enhance={() => {
+					isBulkLoading = true;
+					return async ({ update }) => {
+						await update();
+						isBulkLoading = false;
+						isBulkDeletingModalOpen = false;
+						selectedIds = [];
+					};
+				}}
+				class="flex items-center justify-end gap-3 pt-2"
+			>
+				<input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
+
+				<button
+					type="button"
+					onclick={() => isBulkDeletingModalOpen = false}
+					disabled={isBulkLoading}
+					class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+				>
+					Annuler
+				</button>
+
+				<button
+					type="submit"
+					disabled={isBulkLoading}
+					id="confirm-bulk-delete-btn"
+					class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors inline-flex items-center gap-2"
+				>
+					{#if isBulkLoading}
+						<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+						</svg>
+						Suppression…
+					{:else}
+						Supprimer {selectedIds.length} membres
 					{/if}
 				</button>
 			</form>

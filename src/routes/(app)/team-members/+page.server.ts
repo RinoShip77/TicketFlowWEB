@@ -83,5 +83,114 @@ export const actions: Actions = {
 		}
 
 		return { action: 'deleteMember', success: true };
+	},
+
+	bulkDelete: async ({ request, cookies }) => {
+		const token = cookies.get('tf_token');
+		if (!token) throw redirect(302, '/login');
+
+		const data = await request.formData();
+		const rawIds = data.get('ids') as string;
+		if (!rawIds) return fail(400, { bulkError: 'Aucun membre sélectionné.' });
+
+		let ids: string[] = [];
+		try {
+			ids = JSON.parse(rawIds);
+		} catch {
+			return fail(400, { bulkError: 'Format des identifiants invalide.' });
+		}
+
+		if (!Array.isArray(ids) || ids.length === 0) {
+			return fail(400, { bulkError: 'Aucun membre sélectionné.' });
+		}
+
+		try {
+			await Promise.all(
+				ids.map((id) => apiFetch(`/api/technicians/${id}`, { method: 'DELETE', token }))
+			);
+		} catch (err) {
+			if (err instanceof ApiException) {
+				if (err.statusCode === 401) {
+					cookies.delete('tf_token', { path: '/' });
+					cookies.delete('tf_user', { path: '/' });
+					throw redirect(302, '/login');
+				}
+				return fail(err.statusCode, { bulkError: err.message });
+			}
+			return fail(500, { bulkError: 'Erreur lors de la suppression en lot.' });
+		}
+
+		return { action: 'bulkDelete', success: true };
+	},
+
+	bulkUpdate: async ({ request, cookies }) => {
+		const token = cookies.get('tf_token');
+		if (!token) throw redirect(302, '/login');
+
+		const data = await request.formData();
+		const rawIds = data.get('ids') as string;
+		const name = (data.get('name') as string)?.trim();
+		const department = (data.get('department') as string)?.trim();
+		const roleTitle = data.get('roleTitle') as string | null;
+		const levelRaw = data.get('level') as string | null;
+		const status = data.get('status') as string | null;
+
+		if (!rawIds) return fail(400, { bulkError: 'Aucun membre sélectionné.' });
+
+		let ids: string[] = [];
+		try {
+			ids = JSON.parse(rawIds);
+		} catch {
+			return fail(400, { bulkError: 'Format des identifiants invalide.' });
+		}
+
+		if (!Array.isArray(ids) || ids.length === 0) {
+			return fail(400, { bulkError: 'Aucun membre sélectionné.' });
+		}
+
+		const payload: Record<string, any> = {};
+		if (name) payload.name = name;
+		if (department) payload.department = department;
+		if (status) payload.status = status;
+		if (roleTitle) {
+			payload.roleTitle = roleTitle;
+			if (roleTitle === 'Admin') payload.level = 3;
+		}
+		if (levelRaw) {
+			const lvl = parseInt(levelRaw, 10);
+			if (!isNaN(lvl)) {
+				payload.level = lvl;
+				if (lvl === 3) payload.roleTitle = 'Admin';
+				else if (lvl < 3 && !roleTitle) payload.roleTitle = 'Technician';
+			}
+		}
+
+		if (Object.keys(payload).length === 0) {
+			return fail(400, { bulkError: 'Veuillez choisir au moins une propriété à modifier.' });
+		}
+
+		try {
+			await Promise.all(
+				ids.map((id) =>
+					apiFetch(`/api/technicians/${id}`, {
+						method: 'PATCH',
+						token,
+						body: payload
+					})
+				)
+			);
+		} catch (err) {
+			if (err instanceof ApiException) {
+				if (err.statusCode === 401) {
+					cookies.delete('tf_token', { path: '/' });
+					cookies.delete('tf_user', { path: '/' });
+					throw redirect(302, '/login');
+				}
+				return fail(err.statusCode, { bulkError: err.message });
+			}
+			return fail(500, { bulkError: 'Erreur lors de la modification en lot.' });
+		}
+
+		return { action: 'bulkUpdate', success: true };
 	}
 };
