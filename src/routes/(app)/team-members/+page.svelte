@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page as pageState } from '$app/state';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -7,12 +9,70 @@
 
 	let { data }: Props = $props();
 
-	let searchQuery = $state('');
-	let selectedDepartment = $state('');
-	let currentPage = $state(1);
+	// ── Types ──────────────────────────────────────────────────────────
+	type SortField = 'name' | 'email' | 'department' | 'roleTitle' | 'status' | 'level';
+	type SortOrder = 'asc' | 'desc';
+
+	// ── Sort state — synchronisé avec l'URL ────────────────────────────
+	const sortBy   = $derived<SortField>((pageState.url.searchParams.get('sortBy')  as SortField)  ?? 'name');
+	const orderBy  = $derived<SortOrder>((pageState.url.searchParams.get('orderBy') as SortOrder)  ?? 'asc');
+
+	// ── Filter state — synchronisé avec l'URL ─────────────────────────
+	let searchQuery       = $state(pageState.url.searchParams.get('search') ?? '');
+	let selectedDepartment = $state(pageState.url.searchParams.get('dept') ?? '');
+	let currentPage       = $state(Number(pageState.url.searchParams.get('page') ?? '1'));
 	const pageSize = 10;
 
-	// Palette d'avatars inspirée de la capture d'écran
+	// Sync si l'URL change (navigation arrière/avant)
+	$effect(() => {
+		searchQuery        = pageState.url.searchParams.get('search') ?? '';
+		selectedDepartment = pageState.url.searchParams.get('dept')   ?? '';
+		currentPage        = Number(pageState.url.searchParams.get('page') ?? '1');
+	});
+
+	let searchTimeout: ReturnType<typeof setTimeout>;
+
+	// ── Helpers navigation ─────────────────────────────────────────────
+	function buildParams(overrides: Record<string, string | null> = {}) {
+		const params = new URLSearchParams(pageState.url.searchParams);
+		for (const [key, value] of Object.entries(overrides)) {
+			if (value === null || value === '') params.delete(key);
+			else params.set(key, value);
+		}
+		return params;
+	}
+
+	function applySort(field: SortField) {
+		const params = buildParams({ page: '1' });
+		if (sortBy === field) {
+			params.set('orderBy', orderBy === 'desc' ? 'asc' : 'desc');
+			params.set('sortBy', field);
+		} else {
+			params.set('sortBy', field);
+			params.set('orderBy', 'asc');
+		}
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+	}
+
+	function onSearchInput() {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => {
+			const params = buildParams({ page: '1', search: searchQuery || null });
+			goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+		}, 350);
+	}
+
+	function onDeptChange() {
+		const params = buildParams({ page: '1', dept: selectedDepartment || null });
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+	}
+
+	function goToPage(p: number) {
+		const params = buildParams({ page: String(p) });
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+	}
+
+	// ── Avatar / initiales ─────────────────────────────────────────────
 	const avatarStyles = [
 		'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300',
 		'bg-sky-100 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300',
@@ -33,30 +93,54 @@
 
 	function getInitials(name: string): string {
 		const parts = name.trim().split(' ');
-		if (parts.length >= 2) {
-			return (parts[0][0] + parts[1][0]).toUpperCase();
-		}
+		if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
 		return name.slice(0, 2).toUpperCase();
 	}
 
-	// Filtres réactifs Svelte 5 ($derived direct)
+	// ── Pipeline : filtre → tri → pagination ──────────────────────────
 	const filteredMembers = $derived(
 		(data.members ?? []).filter((m) => {
+			const q = searchQuery.toLowerCase();
 			const matchesSearch =
-				searchQuery === '' ||
-				m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				m.email.toLowerCase().includes(searchQuery.toLowerCase());
+				q === '' ||
+				m.name.toLowerCase().includes(q) ||
+				m.email.toLowerCase().includes(q);
 			const matchesDept =
 				selectedDepartment === '' || m.department === selectedDepartment;
 			return matchesSearch && matchesDept;
 		})
 	);
 
-	const totalPages = $derived(Math.ceil(filteredMembers.length / pageSize) || 1);
+	const sortedMembers = $derived.by(() => {
+		const field = sortBy;
+		const dir   = orderBy === 'asc' ? 1 : -1;
+		return [...filteredMembers].sort((a, b) => {
+			const av = String((a as any)[field] ?? '').toLowerCase();
+			const bv = String((b as any)[field] ?? '').toLowerCase();
+			return av < bv ? -dir : av > bv ? dir : 0;
+		});
+	});
+
+	const totalPages = $derived(Math.ceil(sortedMembers.length / pageSize) || 1);
 
 	const paginatedMembers = $derived(
-		filteredMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+		sortedMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 	);
+
+	// Pagination pages — même logique que la page tickets
+	const paginationPages = $derived.by(() => {
+		const total = totalPages;
+		const cur   = currentPage;
+		if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+		const pages: (number | '…')[] = [1];
+		if (cur > 3) pages.push('…');
+		for (let i = Math.max(2, cur - 1); i <= Math.min(total - 1, cur + 1); i++) {
+			pages.push(i);
+		}
+		if (cur < total - 2) pages.push('…');
+		pages.push(total);
+		return pages;
+	});
 
 	const departments = ['IT', 'Executive Team', 'HR', 'Finance', 'Support Technique'];
 </script>
@@ -96,6 +180,7 @@
 				<input
 					type="text"
 					bind:value={searchQuery}
+					oninput={onSearchInput}
 					placeholder="Search members..."
 					id="search-members"
 					class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
@@ -106,6 +191,7 @@
 			<div class="relative">
 				<select
 					bind:value={selectedDepartment}
+					onchange={onDeptChange}
 					id="filter-department"
 					class="appearance-none pl-3 pr-8 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-colors"
 				>
@@ -134,10 +220,193 @@
 				<table class="w-full text-sm" aria-label="Liste des membres de l'équipe">
 					<thead>
 						<tr class="text-left text-xs font-medium text-gray-400 dark:text-zinc-500 border-b border-gray-100 dark:border-zinc-800">
-							<th class="px-5 py-3.5">Member</th>
-							<th class="px-4 py-3.5">Department</th>
-							<th class="px-4 py-3.5">Role</th>
-							<th class="px-4 py-3.5">Status</th>
+
+							<!-- ── Colonne triable : Member (name) ─────────────────── -->
+							<th
+								class="px-5 py-3.5"
+								aria-sort={sortBy === 'name' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-name"
+									onclick={() => applySort('name')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'name' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par nom"
+								>
+									Member
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'name' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'name' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'name' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Email ──────────────────────────── -->
+							<th
+								class="px-4 py-3.5 hidden md:table-cell"
+								aria-sort={sortBy === 'email' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-email"
+									onclick={() => applySort('email')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'email' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par e-mail"
+								>
+									Email
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'email' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'email' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'email' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Department ────────────────────── -->
+							<th
+								class="px-4 py-3.5"
+								aria-sort={sortBy === 'department' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-department"
+									onclick={() => applySort('department')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'department' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par département"
+								>
+									Department
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'department' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'department' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'department' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Role ───────────────────────────── -->
+							<th
+								class="px-4 py-3.5"
+								aria-sort={sortBy === 'roleTitle' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-role"
+									onclick={() => applySort('roleTitle')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'roleTitle' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par rôle"
+								>
+									Role
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'roleTitle' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'roleTitle' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'roleTitle' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Level ──────────────────────────── -->
+							<th
+								class="px-4 py-3.5 hidden sm:table-cell"
+								aria-sort={sortBy === 'level' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-level"
+									onclick={() => applySort('level')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'level' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par niveau"
+								>
+									Level
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'level' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'level' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'level' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Status ─────────────────────────── -->
+							<th
+								class="px-4 py-3.5"
+								aria-sort={sortBy === 'status' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-status"
+									onclick={() => applySort('status')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'status' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par statut"
+								>
+									Status
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'status' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'status' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'status' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
 							<th class="px-4 py-3.5">Action</th>
 						</tr>
 					</thead>
@@ -158,14 +427,29 @@
 									</div>
 								</td>
 
+								<!-- Email (colonne cachée sur mobile, déjà dans Member) -->
+								<td class="px-4 py-3.5 text-gray-500 dark:text-zinc-400 text-xs hidden md:table-cell">
+									{member.email}
+								</td>
+
 								<!-- Department -->
 								<td class="px-4 py-3.5 text-gray-700 dark:text-zinc-300 font-normal">
 									{member.department}
 								</td>
 
 								<!-- Role -->
-								<td class="px-4 py-3.5 text-gray-700 dark:text-zinc-300 font-normal">
-									{member.roleTitle}
+								<td class="px-4 py-3.5">
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+										{member.roleTitle === 'Admin'
+											? 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300'
+											: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400'}">
+										{member.roleTitle}
+									</span>
+								</td>
+
+								<!-- Level -->
+								<td class="px-4 py-3.5 hidden sm:table-cell text-gray-500 dark:text-zinc-400 text-xs font-mono">
+									L{member.level}
 								</td>
 
 								<!-- Status Badge -->
@@ -212,48 +496,56 @@
 			</div>
 
 			<!-- Pagination Footer -->
-			<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
-				<!-- Previous -->
-				<button
-					onclick={() => (currentPage = Math.max(1, currentPage - 1))}
-					disabled={currentPage === 1}
-					class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-				>
-					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-					</svg>
-					Previous
-				</button>
+			<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between gap-4">
+				<!-- Info -->
+				<span class="text-xs text-gray-400 dark:text-zinc-500 shrink-0">
+					{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, sortedMembers.length)} / {sortedMembers.length} membres
+				</span>
 
-				<!-- Page Numbers -->
+				<!-- Pages -->
 				<div class="flex items-center gap-1">
-					{#each Array.from({ length: Math.max(1, totalPages) }, (_, i) => i + 1) as p}
-						<button
-							onclick={() => (currentPage = p)}
-							class="
-								w-8 h-8 rounded-lg text-sm font-medium transition-colors duration-100
-								{currentPage === p
-									? 'bg-indigo-600 text-white font-semibold'
-									: 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100'}
-							"
-							aria-current={currentPage === p ? 'page' : undefined}
-						>
-							{p}
-						</button>
-					{/each}
-				</div>
+					<!-- Previous -->
+					<button
+						onclick={() => goToPage(Math.max(1, currentPage - 1))}
+						disabled={currentPage === 1}
+						class="flex items-center gap-1 px-2.5 py-1.5 text-sm font-medium rounded-lg text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+						aria-label="Page précédente"
+					>
+						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+						</svg>
+					</button>
 
-				<!-- Next -->
-				<button
-					onclick={() => (currentPage = Math.min(totalPages, currentPage + 1))}
-					disabled={currentPage === totalPages}
-					class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-				>
-					Next
-					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-					</svg>
-				</button>
+					<!-- Page Numbers -->
+					{#each paginationPages as p}
+						{#if p === '…'}
+							<span class="w-8 h-8 flex items-center justify-center text-xs text-gray-400 dark:text-zinc-500">…</span>
+						{:else}
+							<button
+								onclick={() => goToPage(p as number)}
+								class="w-8 h-8 rounded-lg text-sm font-medium transition-colors duration-100
+									{currentPage === p
+										? 'bg-indigo-600 text-white font-semibold'
+										: 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100'}"
+								aria-current={currentPage === p ? 'page' : undefined}
+							>
+								{p}
+							</button>
+						{/if}
+					{/each}
+
+					<!-- Next -->
+					<button
+						onclick={() => goToPage(Math.min(totalPages, currentPage + 1))}
+						disabled={currentPage === totalPages}
+						class="flex items-center gap-1 px-2.5 py-1.5 text-sm font-medium rounded-lg text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+						aria-label="Page suivante"
+					>
+						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+						</svg>
+					</button>
+				</div>
 			</div>
 		{/if}
 	</div>

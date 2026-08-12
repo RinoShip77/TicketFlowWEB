@@ -7,10 +7,13 @@ import { test, expect } from '@playwright/test';
  * `.playwright/auth.json` (via `storageState` dans playwright.config.ts).
  *
  * Scénarios :
- *  1. Rendu de la liste — au moins une ligne utilisateur visible
- *  2. Barre de recherche — présente et interactive
- *  3. Menu déroulant des départements — présent et interactif
- *  4. Filtre de recherche — filtre les résultats en temps réel
+ *  1. Rendu de la liste — titre + bouton Add Member
+ *  2. Tableau de membres — au moins une ligne avec boutons d'action
+ *  3. Barre de recherche — présente et interactive
+ *  4. Menu déroulant des départements — présent et interactif
+ *  5. Filtre de recherche — filtre les résultats en temps réel
+ *  6. Navigation — clic sur "Add Member" va vers /register
+ *  7. Tri sur toutes les colonnes — URL mise à jour
  */
 
 test.describe('Team Members', () => {
@@ -31,7 +34,7 @@ test.describe('Team Members', () => {
 	});
 
 	// ── 2. Tableau de membres — au moins une ligne rendue ───────────────
-	test('rend au moins un membre dans le tableau avec des boutons d\'action', async ({ page }) => {
+	test("rend au moins un membre dans le tableau avec des boutons d'action", async ({ page }) => {
 		// Attendre que le tableau soit rendu (ou le message "aucun membre")
 		const table = page.getByRole('table', { name: /liste des membres/i });
 		const emptyState = page.getByText(/aucun membre trouvé/i);
@@ -84,7 +87,6 @@ test.describe('Team Members', () => {
 		expect(count).toBeGreaterThan(1); // Au moins "All Departments" + 1 département
 
 		// Sélectionner un département et vérifier que la valeur change
-		// (IT est dans la liste des départements définie dans le composant)
 		await deptSelect.selectOption('IT');
 		await expect(deptSelect).toHaveValue('IT');
 
@@ -128,5 +130,35 @@ test.describe('Team Members', () => {
 	test('le bouton "Add Member" navigue vers /register', async ({ page }) => {
 		await page.locator('#btn-add-member').click();
 		await expect(page).toHaveURL(/\/register/, { timeout: 10_000 });
+	});
+
+	// ── 7. Tri sur toutes les colonnes ──────────────────────────────────
+	test('les colonnes du tableau permettent de trier les membres', async ({ page }) => {
+		const table = page.getByRole('table', { name: /liste des membres/i });
+		const hasTable = await table.isVisible().catch(() => false);
+		if (!hasTable) {
+			test.skip();
+			return;
+		}
+
+		// Tri par nom (Member)
+		await page.locator('#sort-name').click();
+		await expect(page).toHaveURL(/sortBy=name/);
+
+		// Double-clic — inverse l'ordre (desc)
+		await page.locator('#sort-name').click();
+		await expect(page).toHaveURL(/sortBy=name.*orderBy=desc|orderBy=desc.*sortBy=name/);
+
+		// Tri par département
+		await page.locator('#sort-department').click();
+		await expect(page).toHaveURL(/sortBy=department/);
+
+		// Tri par rôle
+		await page.locator('#sort-role').click();
+		await expect(page).toHaveURL(/sortBy=roleTitle/);
+
+		// Tri par statut
+		await page.locator('#sort-status').click();
+		await expect(page).toHaveURL(/sortBy=status/);
 	});
 });
