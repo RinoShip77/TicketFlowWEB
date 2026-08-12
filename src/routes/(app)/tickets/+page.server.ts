@@ -5,7 +5,7 @@
  * - page   : numéro de page (défaut: 1)
  * - status : filtre statut ('Open' | 'In progress' | 'Resolved' | 'Closed')
  * - search : recherche sur le titre
- * - sortBy : champ de tri (défaut: createdAt)
+ * - sortBy : champ de tri ('_id' | 'title' | 'originDepartment' | 'status' | 'assignedTo' | 'priority' | 'createdAt', défaut: createdAt)
  * - orderBy: direction (asc | desc)
  */
 

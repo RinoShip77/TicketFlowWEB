@@ -120,4 +120,34 @@ test.describe('Tickets', () => {
 		await page.getByRole('link', { name: /cancel/i }).click();
 		await expect(page).toHaveURL(/\/tickets/, { timeout: 10_000 });
 	});
+
+	// ── 7. Tri sur toutes les colonnes ──────────────────────────────────
+	test('les colonnes de la table permettent de trier les tickets', async ({ page }) => {
+		await page.goto('/tickets');
+
+		// Tri par ID
+		await page.locator('#sort-id').click();
+		await expect(page).toHaveURL(/sortBy=_id/);
+
+		// Tri par Sujet (title)
+		await page.locator('#sort-title').click();
+		await expect(page).toHaveURL(/sortBy=title/);
+
+		// Tri par Statut (status)
+		await page.locator('#sort-status').click();
+		await expect(page).toHaveURL(/sortBy=status/);
+
+		// Inverser l'ordre du statut (asc)
+		await page.locator('#sort-status').click();
+		await expect(page).toHaveURL(/sortBy=status.*orderBy=asc|orderBy=asc.*sortBy=status/);
+
+		// Tri par Priorité (priority)
+		await page.locator('#sort-priority').click();
+		await expect(page).toHaveURL(/sortBy=priority/);
+
+		// Tri par Date (createdAt)
+		await page.locator('#sort-date').click();
+		await expect(page).toHaveURL(/sortBy=createdAt/);
+	});
 });
+

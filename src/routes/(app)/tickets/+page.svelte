@@ -76,7 +76,7 @@
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
 	// ── Sort state (synchronisé avec l'URL via $derived) ────────────
-	type SortField = 'priority' | 'createdAt';
+	type SortField = '_id' | 'title' | 'originDepartment' | 'status' | 'assignedTo' | 'priority' | 'createdAt';
 	type SortOrder = 'asc' | 'desc';
 	// $derived lit data.filters à chaque changement de prop — pas besoin de $effect
 	const sortBy = $derived<SortField>((data.filters.sortBy as SortField) ?? 'createdAt');
@@ -481,11 +481,160 @@
 									aria-label="Sélectionner tous les tickets de cette page"
 								/>
 							</th>
-							<th class="px-3 py-3">Ticket ID</th>
-							<th class="px-4 py-3">Subject</th>
-							<th class="px-4 py-3 hidden md:table-cell">Category</th>
-							<th class="px-4 py-3">Status</th>
-							<th class="px-4 py-3 hidden md:table-cell">Assigned To</th>
+							<!-- ── Colonne triable : Ticket ID ────────────────── -->
+							<th
+								class="px-3 py-3"
+								aria-sort={sortBy === '_id' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-id"
+									onclick={() => applySort('_id')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === '_id' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par ID de ticket"
+								>
+									Ticket ID
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === '_id' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === '_id' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === '_id' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Subject ───────────────────── -->
+							<th
+								class="px-4 py-3"
+								aria-sort={sortBy === 'title' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-title"
+									onclick={() => applySort('title')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'title' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par sujet"
+								>
+									Subject
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'title' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'title' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'title' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Category ──────────────────── -->
+							<th
+								class="px-4 py-3 hidden md:table-cell"
+								aria-sort={sortBy === 'originDepartment' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-category"
+									onclick={() => applySort('originDepartment')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'originDepartment' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par catégorie"
+								>
+									Category
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'originDepartment' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'originDepartment' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'originDepartment' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Status ────────────────────── -->
+							<th
+								class="px-4 py-3"
+								aria-sort={sortBy === 'status' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-status"
+									onclick={() => applySort('status')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'status' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par statut"
+								>
+									Status
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'status' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'status' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'status' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Assigned To ───────────────── -->
+							<th
+								class="px-4 py-3 hidden md:table-cell"
+								aria-sort={sortBy === 'assignedTo' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-assigned"
+									onclick={() => applySort('assignedTo')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'assignedTo' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par technicien assigné"
+								>
+									Assigned To
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'assignedTo' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'assignedTo' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'assignedTo' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
 
 							<!-- ── Colonne triable : Priorité ────────────────── -->
 							<th
