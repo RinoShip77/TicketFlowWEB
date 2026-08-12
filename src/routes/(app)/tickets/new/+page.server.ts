@@ -87,5 +87,79 @@ export const actions: Actions = {
 		}
 
 		throw redirect(302, '/tickets');
+	},
+
+	createBulk: async ({ request, cookies }) => {
+		const token = cookies.get('tf_token');
+		if (!token) throw redirect(302, '/login');
+
+		const data = await request.formData();
+		const rawTickets = data.get('tickets') as string;
+		if (!rawTickets) return fail(400, { bulkFormError: 'Aucun ticket fourni.' });
+
+		let ticketItems: Array<{
+			title: string;
+			description: string;
+			priority: number;
+			originDepartment?: string;
+			assignedTo?: string;
+		}> = [];
+
+		try {
+			ticketItems = JSON.parse(rawTickets);
+		} catch {
+			return fail(400, { bulkFormError: 'Format des tickets invalide.' });
+		}
+
+		if (!Array.isArray(ticketItems) || ticketItems.length === 0) {
+			return fail(400, { bulkFormError: 'Veuillez ajouter au moins un ticket.' });
+		}
+
+		// Validation de chaque ticket
+		const rowErrors: Record<number, string> = {};
+		ticketItems.forEach((t, index) => {
+			if (!t.title?.trim()) {
+				rowErrors[index] = `Ticket #${index + 1} : Le titre est requis.`;
+			} else if (t.title.length > 100) {
+				rowErrors[index] = `Ticket #${index + 1} : Titre > 100 caractères.`;
+			} else if (!t.description?.trim()) {
+				rowErrors[index] = `Ticket #${index + 1} : La description est requise.`;
+			}
+		});
+
+		if (Object.keys(rowErrors).length > 0) {
+			return fail(422, { action: 'createBulk', rowErrors, rawTickets });
+		}
+
+		try {
+			await Promise.all(
+				ticketItems.map((t) =>
+					apiFetch<Ticket>('/api/tickets', {
+						method: 'POST',
+						token,
+						body: {
+							title: t.title.trim(),
+							description: t.description.trim(),
+							priority: (t.priority ?? 3) as TicketPriority,
+							...(t.originDepartment ? { originDepartment: t.originDepartment.trim() } : {}),
+							...(t.assignedTo ? { assignedTo: t.assignedTo.trim() } : {})
+						} satisfies CreateTicketPayload
+					})
+				)
+			);
+		} catch (err) {
+			if (err instanceof ApiException) {
+				if (err.statusCode === 401) {
+					cookies.delete('tf_token', { path: '/' });
+					cookies.delete('tf_user', { path: '/' });
+					throw redirect(302, '/login');
+				}
+				return fail(err.statusCode, { action: 'createBulk', bulkFormError: err.message, rawTickets });
+			}
+			return fail(500, { action: 'createBulk', bulkFormError: 'Erreur lors de la création des tickets.', rawTickets });
+		}
+
+		throw redirect(302, '/tickets');
 	}
 };
+

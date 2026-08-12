@@ -23,6 +23,36 @@
 		ticketToDelete = null;
 	}
 
+	// ── Multi-selection & actions en lot ─────────────────────────
+	let selectedIds = $state<string[]>([]);
+	let isBulkDeletingModalOpen = $state(false);
+	let isBulkLoading = $state(false);
+
+	const allSelected = $derived(
+		data.tickets.length > 0 && data.tickets.every((t) => selectedIds.includes(t._id))
+	);
+
+	function toggleSelectAll() {
+		if (allSelected) {
+			selectedIds = [];
+		} else {
+			selectedIds = data.tickets.map((t) => t._id);
+		}
+	}
+
+	function toggleSelectOne(id: string) {
+		if (selectedIds.includes(id)) {
+			selectedIds = selectedIds.filter((i) => i !== id);
+		} else {
+			selectedIds = [...selectedIds, id];
+		}
+	}
+
+	function clearSelection() {
+		selectedIds = [];
+	}
+
+
 
 	// ── Filter state ─────────────────────────────────────────────
 	let searchValue = $state(data.filters.search);
@@ -243,6 +273,135 @@
 			</div>
 		</div>
 
+		<!-- ── Barre d'actions en lot (si au moins 1 ticket sélectionné) ── -->
+		{#if selectedIds.length > 0}
+			<div class="mb-4 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800/60 rounded-xl p-4 space-y-3 animate-fade-in shadow-sm">
+				<div class="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-200/60 dark:border-indigo-800/40 pb-3">
+					<div class="flex items-center gap-2.5">
+						<span class="inline-flex items-center justify-center bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+							{selectedIds.length}
+						</span>
+						<span class="text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+							{selectedIds.length === 1 ? '1 ticket sélectionné' : `${selectedIds.length} tickets sélectionnés`}
+						</span>
+					</div>
+
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							onclick={() => isBulkDeletingModalOpen = true}
+							disabled={isBulkLoading}
+							id="btn-bulk-delete"
+							class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 shadow-xs inline-flex items-center gap-1.5"
+						>
+							<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+							</svg>
+							Supprimer ({selectedIds.length})
+						</button>
+
+						<button
+							type="button"
+							onclick={clearSelection}
+							class="p-1.5 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors"
+							aria-label="Annuler la sélection"
+						>
+							<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+							</svg>
+						</button>
+					</div>
+				</div>
+
+				<!-- Modification groupée des propriétés -->
+				<form
+					method="POST"
+					action="?/bulkUpdate"
+					use:enhance={() => {
+						isBulkLoading = true;
+						return async ({ update }) => {
+							await update();
+							isBulkLoading = false;
+							selectedIds = [];
+						};
+					}}
+					class="flex flex-wrap items-center gap-2.5"
+				>
+					<input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
+
+					<!-- Statut -->
+					<select
+						name="status"
+						id="bulk-status-select"
+						aria-label="Changer le statut en lot"
+						disabled={isBulkLoading}
+						class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+					>
+						<option value="">Statut (inchangé)</option>
+						<option value="Open">Open</option>
+						<option value="In progress">In Progress</option>
+						<option value="Resolved">Resolved</option>
+						<option value="Closed">Closed</option>
+					</select>
+
+					<!-- Priorité -->
+					<select
+						name="priority"
+						id="bulk-priority-select"
+						aria-label="Changer la priorité en lot"
+						disabled={isBulkLoading}
+						class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+					>
+						<option value="">Priorité (inchangée)</option>
+						<option value="1">P1 — Très faible</option>
+						<option value="2">P2 — Faible</option>
+						<option value="3">P3 — Moyenne</option>
+						<option value="4">P4 — Haute</option>
+						<option value="5">P5 — Critique</option>
+					</select>
+
+					<!-- Assigné à -->
+					<select
+						name="assignedTo"
+						id="bulk-assigned-select"
+						aria-label="Changer le technicien assigné en lot"
+						disabled={isBulkLoading}
+						class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+					>
+						<option value="">Assigné à (inchangé)</option>
+						{#each data.technicians ?? [] as tech}
+							<option value={tech._id ?? tech.id}>{tech.name}</option>
+						{/each}
+					</select>
+
+					<!-- Département (Category) -->
+					<select
+						name="originDepartment"
+						id="bulk-department-select"
+						aria-label="Changer le département en lot"
+						disabled={isBulkLoading}
+						class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+					>
+						<option value="">Département (inchangé)</option>
+						{#each ['TI', 'Ressources Humaines', 'Comptabilité', 'Support Technique', 'Equipe de direction', 'Marketing', 'Finance'] as dept}
+							<option value={dept}>{dept}</option>
+						{/each}
+					</select>
+
+					<button
+						type="submit"
+						disabled={isBulkLoading}
+						id="btn-apply-bulk-update"
+						class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors disabled:opacity-50 shadow-xs"
+					>
+						{isBulkLoading ? 'Enregistrement…' : 'Appliquer aux tickets'}
+					</button>
+				</form>
+			</div>
+		{/if}
+
+
+
 		<!-- Table -->
 		{#if !data.tickets || data.tickets.length === 0}
 			<div class="py-16 text-center">
@@ -257,7 +416,17 @@
 				<table class="w-full text-sm" aria-label="Liste des tickets">
 					<thead>
 						<tr class="text-left text-xs font-medium text-gray-400 dark:text-zinc-500 border-b border-gray-100 dark:border-zinc-800">
-							<th class="px-5 py-3">Ticket ID</th>
+							<!-- Checkbox Select All -->
+							<th class="px-3 py-3 w-10 text-center">
+								<input
+									type="checkbox"
+									checked={allSelected}
+									onclick={toggleSelectAll}
+									class="rounded border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4"
+									aria-label="Sélectionner tous les tickets de cette page"
+								/>
+							</th>
+							<th class="px-3 py-3">Ticket ID</th>
 							<th class="px-4 py-3">Subject</th>
 							<th class="px-4 py-3 hidden md:table-cell">Category</th>
 							<th class="px-4 py-3">Status</th>
@@ -336,8 +505,19 @@
 						{#each data.tickets as ticket (ticket._id)}
 							{@const sb = statusBadge(ticket.status)}
 							{@const pb = priorityBadge(ticket.priority)}
-							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100">
-								<td class="px-5 py-3.5 text-gray-400 dark:text-zinc-500 text-xs font-mono">
+							{@const isSelected = selectedIds.includes(ticket._id)}
+							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100 {isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/30' : ''}">
+								<!-- Checkbox Select One -->
+								<td class="px-3 py-3.5 text-center">
+									<input
+										type="checkbox"
+										checked={isSelected}
+										onclick={() => toggleSelectOne(ticket._id)}
+										class="rounded border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4"
+										aria-label="Sélectionner le ticket {ticket.title}"
+									/>
+								</td>
+								<td class="px-3 py-3.5 text-gray-400 dark:text-zinc-500 text-xs font-mono">
 									#{ticket._id.slice(-4)}
 								</td>
 								<td class="px-4 py-3.5 max-w-[180px]">
@@ -530,3 +710,67 @@
 		</div>
 	</div>
 {/if}
+
+<!-- ── Modal de confirmation de suppression en lot ──────────────────── -->
+{#if isBulkDeletingModalOpen}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="modal-bulk-delete-title">
+		<div class="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-6 space-y-4">
+			<div class="flex items-center gap-3 text-red-600 dark:text-red-400">
+				<div class="p-2 rounded-full bg-red-100 dark:bg-red-950/60 shrink-0">
+					<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+					</svg>
+				</div>
+				<h3 id="modal-bulk-delete-title" class="text-lg font-bold text-gray-900 dark:text-white">Confirmer la suppression en lot</h3>
+			</div>
+
+			<p class="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+				Êtes-vous sûr de vouloir supprimer définitivement <strong class="text-gray-900 dark:text-zinc-200">{selectedIds.length} tickets</strong> ? Cette action est irréversible.
+			</p>
+
+			<form
+				method="POST"
+				action="?/bulkDelete"
+				use:enhance={() => {
+					isBulkLoading = true;
+					return async ({ update }) => {
+						await update();
+						isBulkLoading = false;
+						isBulkDeletingModalOpen = false;
+						selectedIds = [];
+					};
+				}}
+				class="flex items-center justify-end gap-3 pt-2"
+			>
+				<input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
+
+				<button
+					type="button"
+					onclick={() => isBulkDeletingModalOpen = false}
+					disabled={isBulkLoading}
+					class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+				>
+					Annuler
+				</button>
+
+				<button
+					type="submit"
+					disabled={isBulkLoading}
+					id="confirm-bulk-delete-btn"
+					class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors inline-flex items-center gap-2"
+				>
+					{#if isBulkLoading}
+						<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+						</svg>
+						Suppression…
+					{:else}
+						Supprimer {selectedIds.length} tickets
+					{/if}
+				</button>
+			</form>
+		</div>
+	</div>
+{/if}
+

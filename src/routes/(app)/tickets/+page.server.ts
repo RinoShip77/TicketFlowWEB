@@ -12,7 +12,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { apiFetch, ApiException } from '$lib/server/api';
-import type { PaginatedResponse, Ticket } from '$lib/types';
+import type { PaginatedResponse, Ticket, TicketPriority, TicketStatus, UpdateTicketPayload, User } from '$lib/types';
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	const token = cookies.get('tf_token');
@@ -30,14 +30,19 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 	if (search) params.set('search', search);
 
 	try {
-		const response = await apiFetch<PaginatedResponse<Ticket>>(
-			`/api/tickets?${params.toString()}`,
-			{ token }
-		);
+		const [response, techniciansRes] = await Promise.all([
+			apiFetch<PaginatedResponse<Ticket>>(`/api/tickets?${params.toString()}`, { token }),
+			apiFetch<User[] | { value: User[] }>('/api/technicians', { token }).catch(() => [])
+		]);
+
+		const technicians = Array.isArray(techniciansRes)
+			? techniciansRes
+			: ((techniciansRes as any)?.value ?? []);
 
 		return {
 			tickets: response.data,
 			meta: response.meta,
+			technicians,
 			filters: { page: Number(page), status, search, sortBy, orderBy }
 		};
 	} catch (err) {
@@ -49,6 +54,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 		return {
 			tickets: [] as Ticket[],
 			meta: null,
+			technicians: [] as User[],
 			filters: { page: 1, status, search, sortBy, orderBy }
 		};
 	}
@@ -84,6 +90,105 @@ export const actions: Actions = {
 		}
 
 		return { success: true };
+	},
+
+	bulkDelete: async ({ request, cookies }) => {
+		const token = cookies.get('tf_token');
+		if (!token) throw redirect(302, '/login');
+
+		const data = await request.formData();
+		const rawIds = data.get('ids') as string;
+		if (!rawIds) return fail(400, { bulkError: 'Aucun ticket sélectionné.' });
+
+		let ids: string[] = [];
+		try {
+			ids = JSON.parse(rawIds);
+		} catch {
+			return fail(400, { bulkError: 'Format des identifiants invalide.' });
+		}
+
+		if (!Array.isArray(ids) || ids.length === 0) {
+			return fail(400, { bulkError: 'Aucun ticket sélectionné.' });
+		}
+
+		try {
+			await Promise.all(
+				ids.map((id) => apiFetch(`/api/tickets/${id}`, { method: 'DELETE', token }))
+			);
+		} catch (err) {
+			if (err instanceof ApiException) {
+				if (err.statusCode === 401) {
+					cookies.delete('tf_token', { path: '/' });
+					cookies.delete('tf_user', { path: '/' });
+					throw redirect(302, '/login');
+				}
+				return fail(err.statusCode, { bulkError: err.message });
+			}
+			return fail(500, { bulkError: 'Erreur lors de la suppression en lot.' });
+		}
+
+		return { action: 'bulkDelete', success: true };
+	},
+
+	bulkUpdate: async ({ request, cookies }) => {
+		const token = cookies.get('tf_token');
+		if (!token) throw redirect(302, '/login');
+
+		const data = await request.formData();
+		const rawIds = data.get('ids') as string;
+		const status = data.get('status') as TicketStatus | null;
+		const priorityRaw = data.get('priority') as string | null;
+		const assignedTo = data.get('assignedTo') as string | null;
+		const originDepartment = data.get('originDepartment') as string | null;
+
+		if (!rawIds) return fail(400, { bulkError: 'Aucun ticket sélectionné.' });
+
+		let ids: string[] = [];
+		try {
+			ids = JSON.parse(rawIds);
+		} catch {
+			return fail(400, { bulkError: 'Format des identifiants invalide.' });
+		}
+
+		if (!Array.isArray(ids) || ids.length === 0) {
+			return fail(400, { bulkError: 'Aucun ticket sélectionné.' });
+		}
+
+		const payload: UpdateTicketPayload = {};
+		if (status) payload.status = status;
+		if (priorityRaw) payload.priority = parseInt(priorityRaw, 10) as TicketPriority;
+		if (assignedTo !== null && assignedTo !== undefined && assignedTo !== '') payload.assignedTo = assignedTo;
+		if (originDepartment !== null && originDepartment !== undefined && originDepartment !== '') payload.originDepartment = originDepartment;
+
+		if (Object.keys(payload).length === 0) {
+			return fail(400, { bulkError: 'Veuillez choisir au moins une propriété à modifier.' });
+		}
+
+		try {
+			await Promise.all(
+				ids.map((id) =>
+					apiFetch(`/api/tickets/${id}`, {
+						method: 'PATCH',
+						token,
+						body: payload
+					})
+				)
+			);
+		} catch (err) {
+			if (err instanceof ApiException) {
+				if (err.statusCode === 401) {
+					cookies.delete('tf_token', { path: '/' });
+					cookies.delete('tf_user', { path: '/' });
+					throw redirect(302, '/login');
+				}
+				return fail(err.statusCode, { bulkError: err.message });
+			}
+			return fail(500, { bulkError: 'Erreur lors de la modification en lot.' });
+		}
+
+		return { action: 'bulkUpdate', success: true };
 	}
 };
+
+
 
