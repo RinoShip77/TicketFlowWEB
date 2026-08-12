@@ -11,6 +11,22 @@
 
 	let { data }: Props = $props();
 
+	// ── View Mode State (List vs Grid) ───────────────────────────
+	let viewMode = $state<'list' | 'grid'>(
+		(pageState.url.searchParams.get('view') as 'list' | 'grid') || 'list'
+	);
+
+	function setViewMode(mode: 'list' | 'grid') {
+		viewMode = mode;
+		const params = new URLSearchParams(pageState.url.searchParams);
+		if (mode === 'grid') {
+			params.set('view', 'grid');
+		} else {
+			params.delete('view');
+		}
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
 	// ── Suppression state & confirmation ──────────────────────────
 	let ticketToDelete = $state<{ id: string; title: string } | null>(null);
 	let isDeleting = $state(false);
@@ -70,6 +86,8 @@
 	$effect(() => {
 		searchValue = data.filters.search;
 		statusFilter = data.filters.status;
+		const urlView = pageState.url.searchParams.get('view');
+		viewMode = urlView === 'grid' ? 'grid' : 'list';
 	});
 
 	function applyFilter(overrides: { page?: number; status?: string; search?: string }) {
@@ -190,6 +208,20 @@
 		return avatarColors[Math.abs(h)];
 	}
 
+	function getAvatarColor(name: string): string {
+		return avatarColor(name);
+	}
+
+	function getInitials(name: string): string {
+		if (!name) return '?';
+		return name
+			.split(' ')
+			.map((part) => part[0])
+			.join('')
+			.toUpperCase()
+			.slice(0, 2);
+	}
+
 	const statusOptions: { value: string; label: string }[] = [
 		{ value: '', label: 'All Statuses' },
 		{ value: 'Open', label: 'Open' },
@@ -258,15 +290,38 @@
 				</svg>
 			</div>
 
-			<!-- View toggle -->
-			<div class="flex items-center gap-1 border border-gray-200 dark:border-zinc-700 rounded-lg p-0.5 ml-auto">
-				<button class="p-1.5 rounded-md bg-indigo-600 text-white" aria-label="Vue liste" aria-pressed="true">
-					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+			<!-- View toggle (List vs Grid) -->
+			<div class="inline-flex items-center p-1 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700/80 shadow-xs gap-1 ml-auto">
+				<button
+					type="button"
+					onclick={() => setViewMode('list')}
+					id="btn-view-list"
+					class="p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer
+						{viewMode === 'list'
+							? 'bg-indigo-600 text-white shadow-xs'
+							: 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}"
+					aria-label="Vue liste"
+					aria-pressed={viewMode === 'list'}
+				>
+					<!-- 5 horizontal lines icon (exact match to user image) -->
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 9.5h16M4 13h16M4 16.5h16M4 20h16" />
 					</svg>
 				</button>
-				<button class="p-1.5 rounded-md text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300" aria-label="Vue grille" aria-pressed="false">
-					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+				<button
+					type="button"
+					onclick={() => setViewMode('grid')}
+					id="btn-view-grid"
+					class="p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer
+						{viewMode === 'grid'
+							? 'bg-indigo-600 text-white shadow-xs'
+							: 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}"
+					aria-label="Vue grille"
+					aria-pressed={viewMode === 'grid'}
+				>
+					<!-- 4 rounded squares in 2x2 grid icon (exact match to user image) -->
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
 					</svg>
 				</button>
@@ -411,7 +466,7 @@
 				<p class="text-gray-500 dark:text-zinc-400 text-sm">Aucun ticket trouvé.</p>
 				<a href="/tickets/new" class="text-indigo-600 dark:text-indigo-400 text-sm hover:underline mt-1 inline-block">Créer le premier ticket →</a>
 			</div>
-		{:else}
+		{:else if viewMode === 'list'}
 			<div class="overflow-x-auto">
 				<table class="w-full text-sm" aria-label="Liste des tickets">
 					<thead>
@@ -594,8 +649,127 @@
 					</tbody>
 				</table>
 			</div>
+		{:else}
+			<!-- ── Vue Grille / Cartes ─────────────────────────────────── -->
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+				{#each data.tickets as ticket (ticket._id)}
+					{@const isSelected = selectedIds.includes(ticket._id)}
+					{@const sb = statusBadge(ticket.status)}
+					{@const pb = priorityBadge(ticket.priority)}
+					{@const tech = typeof ticket.assignedTo === 'object' ? ticket.assignedTo : null}
+					{@const techName = tech ? tech.name : (typeof ticket.assignedTo === 'string' && ticket.assignedTo ? ticket.assignedTo : null)}
 
-			<!-- Pagination -->
+					<div
+						class="relative flex flex-col justify-between p-5 rounded-2xl border bg-white dark:bg-zinc-900 shadow-xs hover:shadow-md transition-all duration-200 group
+							{isSelected
+								? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/20 dark:bg-indigo-950/20'
+								: 'border-gray-200 dark:border-zinc-800/80 hover:border-gray-300 dark:hover:border-zinc-700'}"
+					>
+						<!-- Top row: Select Checkbox & Status/Priority Pills -->
+						<div>
+							<div class="flex items-center justify-between gap-2 mb-3">
+								<div class="flex items-center gap-2">
+									<input
+										type="checkbox"
+										checked={isSelected}
+										onclick={() => toggleSelectOne(ticket._id)}
+										class="rounded border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4"
+										aria-label="Sélectionner le ticket {ticket.title}"
+									/>
+									<span class="font-mono text-xs font-semibold text-gray-500 dark:text-zinc-400">
+										#{ticket._id.slice(-6).toUpperCase()}
+									</span>
+								</div>
+
+								<div class="flex items-center gap-1.5">
+									<!-- Priority badge -->
+									<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-zinc-800 {pb.color}">
+										<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:{pb.dot}" aria-hidden="true"></span>
+										P{ticket.priority}
+									</span>
+
+									<!-- Status badge -->
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-zinc-800 {sb.color}">
+										{sb.label}
+									</span>
+								</div>
+							</div>
+
+							<!-- Title -->
+							<h3 class="font-semibold text-gray-900 dark:text-white text-base leading-snug line-clamp-2 mb-1.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+								<a href="/tickets/{ticket._id}">
+									{ticket.title}
+								</a>
+							</h3>
+
+							<!-- Description snippet -->
+							<p class="text-xs text-gray-500 dark:text-zinc-400 line-clamp-2 mb-4 leading-relaxed">
+								{ticket.description || 'Aucune description fournie.'}
+							</p>
+						</div>
+
+						<!-- Bottom section: Meta tags, Tech, Date & Action button -->
+						<div class="border-t border-gray-100 dark:border-zinc-800/80 pt-3.5 mt-2 space-y-3">
+							<div class="flex items-center justify-between gap-2 text-xs">
+								<!-- Department pill -->
+								<span class="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-300 font-medium">
+									{ticket.originDepartment || 'Général'}
+								</span>
+
+								<!-- Date -->
+								<span class="text-gray-400 dark:text-zinc-500">
+									{formatDate(ticket.createdAt)}
+								</span>
+							</div>
+
+							<div class="flex items-center justify-between gap-2 pt-1">
+								<!-- Assigned Tech Avatar -->
+								<div class="flex items-center gap-2 min-w-0">
+									{#if techName}
+										<div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 {getAvatarColor(techName)}">
+											{getInitials(techName)}
+										</div>
+										<span class="text-xs text-gray-700 dark:text-zinc-300 font-medium truncate">
+											{techName}
+										</span>
+									{:else}
+										<span class="text-xs text-gray-400 dark:text-zinc-500 italic">
+											Non assigné
+										</span>
+									{/if}
+								</div>
+
+								<!-- Quick actions -->
+								<div class="flex items-center gap-1.5 shrink-0">
+									<a
+										href="/tickets/{ticket._id}"
+										class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 transition-colors"
+									>
+										<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+										</svg>
+										Ouvrir
+									</a>
+
+									<button
+										type="button"
+										onclick={() => confirmDelete(ticket._id, ticket.title)}
+										class="text-gray-400 dark:text-zinc-500 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40"
+										aria-label="Supprimer le ticket {ticket.title}"
+									>
+										<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+										</svg>
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Pagination -->
 			{#if data.meta && data.meta.totalPages > 1}
 				<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
 					<!-- Previous -->
@@ -645,7 +819,6 @@
 					</button>
 				</div>
 			{/if}
-		{/if}
 	</div>
 </div>
 
