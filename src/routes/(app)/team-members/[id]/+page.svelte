@@ -395,7 +395,7 @@
 
 				<!-- Ajouter un technicien -->
 				<a
-					href="/register"
+					href="/team-members/new"
 					class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg
 						text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40
 						hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50

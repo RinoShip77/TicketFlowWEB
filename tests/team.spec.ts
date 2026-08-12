@@ -127,10 +127,10 @@ test.describe('Team Members', () => {
 		expect(countAfter).toBe(countBefore);
 	});
 
-	// ── 6. Navigation — clic sur "Add Member" va vers /register ─────────
-	test('le bouton "Add Member" navigue vers /register', async ({ page }) => {
+	// ── 6. Navigation — clic sur "Add Member" va vers /team-members/new ──
+	test('le bouton "Add Member" navigue vers /team-members/new', async ({ page }) => {
 		await page.locator('#btn-add-member').click();
-		await expect(page).toHaveURL(/\/register/, { timeout: 10_000 });
+		await expect(page).toHaveURL(/\/team-members\/new/, { timeout: 10_000 });
 	});
 
 	// ── 7. Tri sur toutes les colonnes ──────────────────────────────────
