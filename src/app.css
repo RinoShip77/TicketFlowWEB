@@ -59,27 +59,84 @@ body {
 .dark ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
 /* ─────────────────────────────────────────
-   Mode Densité Compacte (Interface Density)
+   Mode Densité d'interface (Confortable vs Compacte)
 ───────────────────────────────────────── */
-[data-density="compact"] th,
+
+/* ── Mode COMPACTE (Haute densité d'information, vue condensée) ── */
+[data-density="compact"] th {
+	padding-top: 0.35rem !important;
+	padding-bottom: 0.35rem !important;
+	font-size: 0.75rem !important;
+	line-height: 1rem !important;
+}
+
 [data-density="compact"] td {
-	padding-top: 0.4rem !important;
-	padding-bottom: 0.4rem !important;
+	padding-top: 0.35rem !important;
+	padding-bottom: 0.35rem !important;
+	font-size: 0.75rem !important;
+	line-height: 1rem !important;
 }
 
 [data-density="compact"] table {
-	font-size: 0.8125rem !important;
+	font-size: 0.75rem !important;
 }
 
+/* Avatars réduits en mode compact */
+[data-density="compact"] .w-9.h-9,
+[data-density="compact"] .w-12.h-12 {
+	width: 1.75rem !important;
+	height: 1.75rem !important;
+	font-size: 0.65rem !important;
+}
+
+/* Cartes & Grille en mode compact */
 [data-density="compact"] .grid {
-	gap: 0.75rem !important;
+	gap: 0.625rem !important;
 }
 
-[data-density="compact"] .p-5 {
-	padding: 0.875rem !important;
-}
-
+[data-density="compact"] .p-5,
 [data-density="compact"] .p-6 {
-	padding: 1rem !important;
+	padding: 0.75rem !important;
 }
+
+[data-density="compact"] .px-5.py-4 {
+	padding-left: 0.75rem !important;
+	padding-right: 0.75rem !important;
+	padding-top: 0.5rem !important;
+	padding-bottom: 0.5rem !important;
+}
+
+/* Espacement vertical des pages */
+[data-density="compact"] .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+	margin-top: 0.75rem !important;
+}
+
+/* Inputs, Selects & Boutons */
+[data-density="compact"] input,
+[data-density="compact"] select {
+	padding-top: 0.25rem !important;
+	padding-bottom: 0.25rem !important;
+	font-size: 0.75rem !important;
+}
+
+/* ── Mode CONFORTABLE (Aéré, spacieux, confort de lecture maximal) ── */
+[data-density="comfortable"] th,
+[data-density="comfortable"] td {
+	padding-top: 1.125rem !important;
+	padding-bottom: 1.125rem !important;
+}
+
+[data-density="comfortable"] .p-5,
+[data-density="comfortable"] .p-6 {
+	padding: 1.5rem !important;
+}
+
+[data-density="comfortable"] .grid {
+	gap: 1.5rem !important;
+}
+
+[data-density="comfortable"] .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+	margin-top: 1.75rem !important;
+}
+
 

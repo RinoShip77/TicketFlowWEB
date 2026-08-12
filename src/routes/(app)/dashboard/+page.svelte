@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import type { Ticket, TicketStatus, TicketPriority, DepartmentStat } from '$lib/types';
 	import { getResolvedTheme } from '$lib/theme.svelte';
+	import { getSettings, initSettings } from '$lib/settings.svelte';
+	import { playUrgentTicketAlert } from '$lib/sound';
 
 	interface Props {
 		data: PageData;
@@ -13,6 +17,29 @@
 	const firstName = user?.name?.split(' ')[0] ?? 'là';
 
 	const resolvedTheme = $derived(getResolvedTheme());
+	const settings = $derived(getSettings());
+
+	onMount(() => {
+		initSettings();
+
+		let timer: ReturnType<typeof setInterval>;
+		if (settings.autoRefresh) {
+			timer = setInterval(() => {
+				invalidateAll();
+			}, 60000);
+		}
+
+		if (settings.soundAlerts) {
+			const hasUrgent = (tickets ?? []).some((t) => Number(t.priority) >= 4);
+			if (hasUrgent) {
+				playUrgentTicketAlert();
+			}
+		}
+
+		return () => {
+			if (timer) clearInterval(timer);
+		};
+	});
 
 	// ── Status badge ────────────────────────────────────────────────
 	function statusBadge(status: TicketStatus) {

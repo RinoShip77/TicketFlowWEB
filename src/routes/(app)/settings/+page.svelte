@@ -3,6 +3,7 @@
 	import type { PageData } from './$types';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getSettings, updateSettings, initSettings, type UserSettings } from '$lib/settings.svelte';
+	import { playUrgentTicketAlert } from '$lib/sound';
 
 	interface Props {
 		data: PageData;
@@ -23,6 +24,9 @@
 
 	function saveSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]) {
 		updateSettings({ [key]: value });
+		if (key === 'soundAlerts' && value === true) {
+			playUrgentTicketAlert();
+		}
 		triggerSaveNotice();
 	}
 
@@ -135,15 +139,20 @@
 				</svg>
 				Notifications & Alertes
 			</h3>
-			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Gérez la fréquence et le mode de vos avertissements.</p>
+			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Gérez la fréquence et le mode de vos avertissements en temps réel.</p>
 		</div>
 
 		<!-- Email Notifications -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label for="toggle-email-notifs" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Notifications par courriel</label>
+				<div class="flex items-center gap-2">
+					<label for="toggle-email-notifs" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Notifications par courriel</label>
+					<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+						Prochainement
+					</span>
+				</div>
 				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-					Recevoir un e-mail à chaque attribution ou modification de vos tickets.
+					Recevoir un e-mail automatique à chaque attribution ou modification de vos billets (intégration SMTP).
 				</p>
 			</div>
 			<button
@@ -167,9 +176,23 @@
 		<!-- Alertes sonores -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label for="toggle-sound-alerts" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Alertes sonores (Tickets Urgents)</label>
+				<div class="flex items-center gap-2">
+					<label for="toggle-sound-alerts" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Alertes sonores (Tickets Urgents P4/P5)</label>
+					{#if settings.soundAlerts}
+						<button
+							type="button"
+							onclick={playUrgentTicketAlert}
+							class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors inline-flex items-center gap-1"
+						>
+							<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.287a6 6 0 0 1 0 8.426M12 6.75v10.5l-4.5-3.75H4.5v-3h3L12 6.75Z" />
+							</svg>
+							Tester le son
+						</button>
+					{/if}
+				</div>
 				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-					Émettre un signal sonore lorsqu'un ticket critique (P4/P5) est créé.
+					Émettre un signal sonore synthétisé Web Audio lorsqu'un ticket critique (P4/P5) nécessite votre attention.
 				</p>
 			</div>
 			<button
@@ -193,9 +216,17 @@
 		<!-- Auto Refresh -->
 		<div class="flex items-center justify-between py-1">
 			<div>
-				<label for="toggle-auto-refresh" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Rafraîchissement automatique</label>
+				<div class="flex items-center gap-2">
+					<label for="toggle-auto-refresh" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Rafraîchissement automatique (60s)</label>
+					{#if settings.autoRefresh}
+						<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300">
+							<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+							Actif
+						</span>
+					{/if}
+				</div>
 				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-					Mettre à jour le tableau de bord automatiquement toutes les 60 secondes.
+					Actualiser automatiquement les données du tableau de bord et des billets toutes les 60 secondes en arrière-plan.
 				</p>
 			</div>
 			<button
