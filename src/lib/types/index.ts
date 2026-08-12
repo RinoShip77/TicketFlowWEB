@@ -73,6 +73,20 @@ export interface CreateTicketPayload {
 	assignedTo?: string;
 }
 
+export interface UpdateTicketPayload {
+	title?: string;
+	description?: string;
+	status?: TicketStatus;
+	priority?: TicketPriority;
+	originDepartment?: string;
+	assignedTo?: string | null;
+}
+
+export interface AddNotePayload {
+	text: string;
+}
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Réponses API paginées
 // ─────────────────────────────────────────────────────────────────────────────
