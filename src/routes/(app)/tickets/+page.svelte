@@ -15,7 +15,14 @@
 	let statusFilter = $state(data.filters.status);
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
-	// Sync local filter input values if URL parameters change
+	// ── Sort state (synchronisé avec l'URL via $derived) ────────────
+	type SortField = 'priority' | 'createdAt';
+	type SortOrder = 'asc' | 'desc';
+	// $derived lit data.filters à chaque changement de prop — pas besoin de $effect
+	const sortBy = $derived<SortField>((data.filters.sortBy as SortField) ?? 'createdAt');
+	const orderBy = $derived<SortOrder>((data.filters.orderBy as SortOrder) ?? 'desc');
+
+	// Sync local state si l'URL change (navigation arrière/avant)
 	$effect(() => {
 		searchValue = data.filters.search;
 		statusFilter = data.filters.status;
@@ -39,6 +46,30 @@
 		if (overrides.search !== undefined) {
 			if (overrides.search) params.set('search', overrides.search);
 			else params.delete('search');
+		}
+
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+	}
+
+	/**
+	 * Tri dynamique des colonnes.
+	 * - Si on clique sur la colonne déjà active → inverse l'ordre (asc ↔ desc)
+	 * - Sinon → active la colonne en ordre desc par défaut
+	 * - Remet la pagination à la page 1
+	 */
+	function applySort(field: SortField) {
+		const params = new URLSearchParams(pageState.url.searchParams);
+		params.set('page', '1');
+
+		if (sortBy === field) {
+			// Inverser l'ordre
+			const next: SortOrder = orderBy === 'desc' ? 'asc' : 'desc';
+			params.set('sortBy', field);
+			params.set('orderBy', next);
+		} else {
+			// Nouvelle colonne — desc par défaut
+			params.set('sortBy', field);
+			params.set('orderBy', 'desc');
 		}
 
 		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
@@ -80,6 +111,21 @@
 			Closed:          { label: 'Closed',      color: 'text-red-600 dark:text-red-400' }
 		};
 		return map[status] ?? { label: status, color: 'text-gray-500 dark:text-zinc-400' };
+	}
+
+	/**
+	 * Badge de priorité (P1–P5) avec couleur et point coloré.
+	 * Utilisé dans la colonne Priority du tableau.
+	 */
+	function priorityBadge(p?: number) {
+		const levels: Record<number, { label: string; color: string; dot: string }> = {
+			1: { label: 'Très faible', color: 'text-sky-600 dark:text-sky-400',    dot: '#0ea5e9' },
+			2: { label: 'Faible',      color: 'text-blue-600 dark:text-blue-400',   dot: '#3b82f6' },
+			3: { label: 'Moyenne',     color: 'text-amber-600 dark:text-amber-400', dot: '#f59e0b' },
+			4: { label: 'Haute',       color: 'text-orange-600 dark:text-orange-400', dot: '#f97316' },
+			5: { label: 'Critique',    color: 'text-red-600 dark:text-red-400',     dot: '#ef4444' }
+		};
+		return levels[p ?? 3] ?? levels[3];
 	}
 
 	function formatDate(iso: string) {
@@ -202,13 +248,80 @@
 							<th class="px-4 py-3 hidden md:table-cell">Category</th>
 							<th class="px-4 py-3">Status</th>
 							<th class="px-4 py-3 hidden md:table-cell">Assigned To</th>
-							<th class="px-4 py-3 hidden lg:table-cell">Date</th>
+
+							<!-- ── Colonne triable : Priorité ────────────────── -->
+							<th
+								class="px-4 py-3 hidden sm:table-cell"
+								aria-sort={sortBy === 'priority' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-priority"
+									onclick={() => applySort('priority')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'priority' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par priorité"
+								>
+									Priority
+									<!-- Icône de tri -->
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'priority' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'priority' && orderBy === 'asc'}
+											<!-- Ascendant actif -->
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'priority' && orderBy === 'desc'}
+											<!-- Descendant actif -->
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<!-- Inactif — double flèche -->
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
+
+							<!-- ── Colonne triable : Date ────────────────────── -->
+							<th
+								class="px-4 py-3 hidden lg:table-cell"
+								aria-sort={sortBy === 'createdAt' ? (orderBy === 'asc' ? 'ascending' : 'descending') : 'none'}
+							>
+								<button
+									id="sort-date"
+									onclick={() => applySort('createdAt')}
+									class="inline-flex items-center gap-1 group select-none
+										{sortBy === 'createdAt' ? 'text-indigo-500 dark:text-indigo-400' : 'hover:text-gray-700 dark:hover:text-zinc-200 transition-colors'}"
+									aria-label="Trier par date de création"
+								>
+									Date
+									<!-- Icône de tri -->
+									<span class="inline-flex flex-col gap-px opacity-60 {sortBy === 'createdAt' ? 'opacity-100' : 'group-hover:opacity-80'}" aria-hidden="true">
+										{#if sortBy === 'createdAt' && orderBy === 'asc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 4l4 6H4l4-6z"/>
+											</svg>
+										{:else if sortBy === 'createdAt' && orderBy === 'desc'}
+											<svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 12l-4-6h8l-4 6z"/>
+											</svg>
+										{:else}
+											<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+												<path d="M8 2l3 4H5l3-4zm0 12l-3-4h6l-3 4z"/>
+											</svg>
+										{/if}
+									</span>
+								</button>
+							</th>
 							<th class="px-4 py-3">Action</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
 						{#each data.tickets as ticket (ticket._id)}
 							{@const sb = statusBadge(ticket.status)}
+							{@const pb = priorityBadge(ticket.priority)}
 							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100">
 								<td class="px-5 py-3.5 text-gray-400 dark:text-zinc-500 text-xs font-mono">
 									#{ticket._id.slice(-4)}
@@ -234,9 +347,23 @@
 										<span class="text-gray-400 dark:text-zinc-600 text-xs">Non assigné</span>
 									{/if}
 								</td>
+
+								<!-- ── Cellule Priorité ──────────────────────────────────── -->
+								<td class="px-4 py-3.5 hidden sm:table-cell">
+									<span
+										class="inline-flex items-center gap-1.5 text-xs font-semibold {pb.color}"
+										aria-label="Priorité {pb.label}"
+									>
+										<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:{pb.dot}" aria-hidden="true"></span>
+										P{ticket.priority}
+									</span>
+								</td>
+
+								<!-- ── Cellule Date ────────────────────────────────────────── -->
 								<td class="px-4 py-3.5 hidden lg:table-cell text-xs text-gray-400 dark:text-zinc-500">
 									{formatDate(ticket.createdAt)}
 								</td>
+
 								<td class="px-4 py-3.5">
 									<div class="flex items-center gap-2">
 										<button class="text-gray-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" aria-label="Voir le ticket">
