@@ -58,7 +58,7 @@ export const actions: Actions = {
 				httpOnly: true,
 				secure: process.env.NODE_ENV === 'production',
 				sameSite: 'lax',
-				maxAge: 60 * 60 * 24 * 7 // 7 jours
+				maxAge: 60 * 60 * 8 // 8 heures
 			});
 
 			const userId = user?._id || user?.id || '';

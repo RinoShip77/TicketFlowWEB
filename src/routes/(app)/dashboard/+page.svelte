@@ -296,71 +296,75 @@
 				<a href="/tickets" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">View All</a>
 			</div>
 
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm" aria-label="Aperçu des tickets">
-					<thead>
-						<tr class="text-left text-xs font-medium text-gray-400 dark:text-zinc-500 border-b border-gray-100 dark:border-zinc-800">
-							<th class="px-5 py-3">Ticket ID</th>
-							<th class="px-4 py-3">Subject</th>
-							<th class="px-4 py-3">Status</th>
-							<th class="px-4 py-3 hidden md:table-cell">Assigned To</th>
-							<th class="px-4 py-3 hidden lg:table-cell">Date</th>
-							<th class="px-4 py-3">Action</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
-						{#each tickets.slice(0, 5) as ticket (ticket._id)}
-							{@const sb = statusBadge(ticket.status)}
-							<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100">
-								<td class="px-5 py-3 text-gray-500 dark:text-zinc-500 text-xs font-mono">
-									#{ticket._id.slice(-4)}
-								</td>
-								<td class="px-4 py-3">
-									<span class="text-gray-800 dark:text-zinc-200 font-medium line-clamp-1 max-w-[140px] block">{ticket.title}</span>
-								</td>
-								<td class="px-4 py-3">
-									<span class="text-xs font-medium {sb.color}">{sb.label}</span>
-								</td>
-								<td class="px-4 py-3 hidden md:table-cell">
-									{#if ticket.assignedTo}
-										<div class="flex items-center gap-2">
-											<div class="w-6 h-6 rounded-full {avatarColor(ticket.assignedTo.name)} flex items-center justify-center shrink-0">
-												<span class="text-[10px] font-bold">{avatarInitial(ticket.assignedTo.name)}</span>
-											</div>
-											<span class="text-gray-700 dark:text-zinc-300 text-xs truncate max-w-[80px]">{ticket.assignedTo.name.split(' ')[0]}</span>
-										</div>
-									{:else}
-										<span class="text-gray-400 dark:text-zinc-600 text-xs">—</span>
-									{/if}
-								</td>
-								<td class="px-4 py-3 hidden lg:table-cell text-xs text-gray-400 dark:text-zinc-500">
-									{formatDate(ticket.createdAt)}
-								</td>
-								<td class="px-4 py-3">
-									<div class="flex items-center gap-2">
-										<button class="text-gray-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" aria-label="Voir">
-											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-												<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-											</svg>
-										</button>
-										<a href="/tickets/new" class="text-gray-400 dark:text-zinc-500 hover:text-amber-500 transition-colors" aria-label="Modifier">
-											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-											</svg>
-										</a>
-										<button class="text-gray-400 dark:text-zinc-500 hover:text-red-500 transition-colors" aria-label="Supprimer">
-											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-											</svg>
-										</button>
-									</div>
-								</td>
+			{#if tickets.length > 0}
+				<div class="overflow-x-auto">
+					<table class="w-full text-sm" aria-label="Aperçu des tickets">
+						<thead>
+							<tr class="text-left text-xs font-medium text-gray-400 dark:text-zinc-500 border-b border-gray-100 dark:border-zinc-800">
+								<th class="px-5 py-3">Ticket ID</th>
+								<th class="px-4 py-3">Subject</th>
+								<th class="px-4 py-3">Status</th>
+								<th class="px-4 py-3 hidden md:table-cell">Assigned To</th>
+								<th class="px-4 py-3 hidden lg:table-cell">Date</th>
+								<th class="px-4 py-3">Action</th>
 							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
+						</thead>
+						<tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
+							{#each tickets.slice(0, 5) as ticket (ticket._id)}
+								{@const sb = statusBadge(ticket.status)}
+								<tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-100">
+									<td class="px-5 py-3 text-gray-500 dark:text-zinc-500 text-xs font-mono">
+										#{ticket._id.slice(-4)}
+									</td>
+									<td class="px-4 py-3">
+										<span class="text-gray-800 dark:text-zinc-200 font-medium line-clamp-1 max-w-[140px] block">{ticket.title}</span>
+									</td>
+									<td class="px-4 py-3">
+										<span class="text-xs font-medium {sb.color}">{sb.label}</span>
+									</td>
+									<td class="px-4 py-3 hidden md:table-cell">
+										{#if ticket.assignedTo}
+											<div class="flex items-center gap-2">
+												<div class="w-6 h-6 rounded-full {avatarColor(ticket.assignedTo.name)} flex items-center justify-center shrink-0">
+													<span class="text-[10px] font-bold">{avatarInitial(ticket.assignedTo.name)}</span>
+												</div>
+												<span class="text-gray-700 dark:text-zinc-300 text-xs truncate max-w-[80px]">{ticket.assignedTo.name.split(' ')[0]}</span>
+											</div>
+										{:else}
+											<span class="text-gray-400 dark:text-zinc-600 text-xs">—</span>
+										{/if}
+									</td>
+									<td class="px-4 py-3 hidden lg:table-cell text-xs text-gray-400 dark:text-zinc-500">
+										{formatDate(ticket.createdAt)}
+									</td>
+									<td class="px-4 py-3">
+										<div class="flex items-center gap-2">
+											<button class="text-gray-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" aria-label="Voir">
+												<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+													<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+													<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+												</svg>
+											</button>
+											<a href="/tickets/new" class="text-gray-400 dark:text-zinc-500 hover:text-amber-500 transition-colors" aria-label="Modifier">
+												<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+													<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+												</svg>
+											</a>
+											<button class="text-gray-400 dark:text-zinc-500 hover:text-red-500 transition-colors" aria-label="Supprimer">
+												<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+													<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+												</svg>
+											</button>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{:else}
+				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">Données indisponibles</p>
+			{/if}
 		</div>
 
 		<!-- Recent Activities -->
@@ -370,32 +374,36 @@
 				<a href="/tickets" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">View All</a>
 			</div>
 
-			<div class="divide-y divide-gray-100 dark:divide-zinc-800">
-				{#each tickets.slice(0, 5) as ticket (ticket._id + '-activity')}
-					{@const sb = statusBadge(ticket.status)}
-					<div class="px-4 py-3.5 flex gap-3 items-start">
-						{#if ticket.assignedTo}
-							<div class="w-8 h-8 rounded-full {avatarColor(ticket.assignedTo.name)} flex items-center justify-center shrink-0 mt-0.5">
-								<span class="text-xs font-bold">{avatarInitial(ticket.assignedTo.name)}</span>
-							</div>
-						{:else}
-							<div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 mt-0.5">
-								<svg class="w-4 h-4 text-gray-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-								</svg>
-							</div>
-						{/if}
+			{#if tickets.length > 0}
+				<div class="divide-y divide-gray-100 dark:divide-zinc-800">
+					{#each tickets.slice(0, 5) as ticket (ticket._id + '-activity')}
+						{@const sb = statusBadge(ticket.status)}
+						<div class="px-4 py-3.5 flex gap-3 items-start">
+							{#if ticket.assignedTo}
+								<div class="w-8 h-8 rounded-full {avatarColor(ticket.assignedTo.name)} flex items-center justify-center shrink-0 mt-0.5">
+									<span class="text-xs font-bold">{avatarInitial(ticket.assignedTo.name)}</span>
+								</div>
+							{:else}
+								<div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 mt-0.5">
+									<svg class="w-4 h-4 text-gray-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+									</svg>
+								</div>
+							{/if}
 
-						<div class="min-w-0 flex-1">
-							<p class="text-xs text-gray-800 dark:text-zinc-200 leading-snug">
-								{ticket.assignedTo?.name ?? 'Système'} updated status to
-								<span class="font-semibold {sb.color}">{sb.label}</span>
-							</p>
-							<p class="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">Ticket #{ticket._id.slice(-4)} • {formatDate(ticket.updatedAt)}</p>
+							<div class="min-w-0 flex-1">
+								<p class="text-xs text-gray-800 dark:text-zinc-200 leading-snug">
+									{ticket.assignedTo?.name ?? 'Système'} updated status to
+									<span class="font-semibold {sb.color}">{sb.label}</span>
+								</p>
+								<p class="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">Ticket #{ticket._id.slice(-4)} • {formatDate(ticket.updatedAt)}</p>
+							</div>
 						</div>
-					</div>
-				{/each}
-			</div>
+					{/each}
+				</div>
+			{:else}
+				<p class="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center">Données indisponibles</p>
+			{/if}
 		</div>
 
 	</div>
