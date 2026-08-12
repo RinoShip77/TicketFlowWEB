@@ -5,7 +5,7 @@
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import type { TicketStatus } from '$lib/types';
-	import { getSettings, initSettings } from '$lib/settings.svelte';
+	import { getSettings, updateSettings, initSettings } from '$lib/settings.svelte';
 
 	interface Props {
 		data: PageData;
@@ -93,14 +93,26 @@
 	const sortBy = $derived<SortField>((data.filters.sortBy as SortField) ?? 'createdAt');
 	const orderBy = $derived<SortOrder>((data.filters.orderBy as SortOrder) ?? 'desc');
 
+	const ticketPageSize = $derived(data.meta?.limit ?? settings.itemsPerPage ?? 10);
+
 	// Sync local state si l'URL change (navigation arrière/avant)
 	$effect(() => {
 		searchValue = data.filters.search;
 		statusFilter = data.filters.status;
+
+		const currentLimit = pageState.url.searchParams.get('limit');
+		const targetLimit = String(settings.itemsPerPage ?? 10);
+		if (!currentLimit || currentLimit !== targetLimit) {
+			const params = new URLSearchParams(pageState.url.searchParams);
+			params.set('limit', targetLimit);
+			params.set('page', '1');
+			goto(`?${params.toString()}`, { keepFocus: true, noScroll: true, replaceState: true });
+		}
 	});
 
 	function applyFilter(overrides: { page?: number; status?: string; search?: string }) {
 		const params = new URLSearchParams(pageState.url.searchParams);
+		params.set('limit', String(settings.itemsPerPage ?? 10));
 
 		if (overrides.page !== undefined) {
 			params.set('page', String(overrides.page));
@@ -131,6 +143,7 @@
 	function applySort(field: SortField) {
 		const params = new URLSearchParams(pageState.url.searchParams);
 		params.set('page', '1');
+		params.set('limit', String(settings.itemsPerPage ?? 10));
 
 		if (sortBy === field) {
 			// Inverser l'ordre
@@ -428,6 +441,28 @@
 					{#each statusOptions as opt}
 						<option value={opt.value}>{opt.label}</option>
 					{/each}
+				</select>
+				<svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-zinc-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+				</svg>
+			</div>
+
+			<!-- Items per page selector -->
+			<div class="relative">
+				<select
+					value={settings.itemsPerPage}
+					onchange={(e) => {
+						const val = parseInt((e.target as HTMLSelectElement).value, 10) as any;
+						updateSettings({ itemsPerPage: val });
+						applyFilter({ page: 1 });
+					}}
+					id="select-ticket-items-per-page"
+					aria-label="Nombre d'éléments par page"
+					class="appearance-none pl-3 pr-8 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-colors"
+				>
+					<option value="10">10 / page</option>
+					<option value="25">25 / page</option>
+					<option value="50">50 / page</option>
 				</select>
 				<svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-zinc-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -940,7 +975,7 @@
 			<div class="px-5 py-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between gap-4">
 				<!-- Info compteur de range -->
 				<span class="text-xs text-gray-400 dark:text-zinc-500 shrink-0">
-					{(data.meta.currentPage - 1) * 10 + 1}–{Math.min(data.meta.currentPage * 10, data.meta.totalDocuments)} / {data.meta.totalDocuments} billets
+					{(data.meta.currentPage - 1) * ticketPageSize + 1}–{Math.min(data.meta.currentPage * ticketPageSize, data.meta.totalDocuments)} / {data.meta.totalDocuments} billets
 				</span>
 
 				<!-- Boutons de pagination (Chevrons + Numéros de pages) -->

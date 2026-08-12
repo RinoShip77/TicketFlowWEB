@@ -270,8 +270,8 @@
 				onchange={(e) => saveSetting('language', (e.target as HTMLSelectElement).value as any)}
 				class="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
 			>
-				<option value="fr-CA">Français (Canada) 🇨🇦 (Par défaut)</option>
-				<option value="en-CA">English (Canada) 🇨🇦</option>
+				<option value="fr-CA">Français 🇨🇦 (Par défaut)</option>
+				<option value="en-CA">English 🇨🇦</option>
 			</select>
 		</div>
 
