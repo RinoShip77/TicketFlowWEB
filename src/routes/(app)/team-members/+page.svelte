@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { page as pageState } from '$app/state';
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
+	import { initSettings } from '$lib/settings.svelte';
 
 	interface Props {
 		data: PageData;
@@ -10,6 +12,10 @@
 	}
 
 	let { data, form }: Props = $props();
+
+	onMount(() => {
+		initSettings();
+	});
 
 	// ── Types ──────────────────────────────────────────────────────────
 	type SortField = 'name' | 'email' | 'department' | 'roleTitle' | 'status' | 'level';

@@ -53,3 +53,8 @@ export function initSettings() {
 		settingsState = { ...DEFAULT_SETTINGS };
 	}
 }
+
+// Initialisation immédiate côté client
+if (typeof window !== 'undefined') {
+	initSettings();
+}

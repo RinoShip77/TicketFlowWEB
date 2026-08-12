@@ -3,7 +3,9 @@
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import { initSettings, getSettings } from '$lib/settings.svelte';
 
 	interface Props {
 		children: Snippet;
@@ -11,6 +13,12 @@
 	}
 
 	let { children, data }: Props = $props();
+
+	onMount(() => {
+		initSettings();
+	});
+
+	const settings = $derived(getSettings());
 
 	let mobileMenuOpen = $state(false);
 
@@ -227,7 +235,7 @@
 		</header>
 
 		<!-- Page content (Responsive Container) -->
-		<main class="flex-1 overflow-auto bg-gray-50 dark:bg-zinc-950 transition-colors duration-200">
+		<main data-density={settings.density} class="flex-1 overflow-auto bg-gray-50 dark:bg-zinc-950 transition-colors duration-200">
 			<div class="p-4 sm:p-6 lg:p-8">
 				{@render children()}
 			</div>

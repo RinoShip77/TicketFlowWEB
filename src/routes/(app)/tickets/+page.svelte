@@ -2,8 +2,10 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page as pageState } from '$app/state';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import type { TicketStatus } from '$lib/types';
+	import { getSettings, initSettings } from '$lib/settings.svelte';
 
 	interface Props {
 		data: PageData;
@@ -11,18 +13,27 @@
 
 	let { data }: Props = $props();
 
+	const settings = $derived(getSettings());
+
+	onMount(() => {
+		initSettings();
+	});
+
 	// ── View Mode State (List vs Grid) ───────────────────────────
-	let viewMode = $state<'list' | 'grid'>(
-		(pageState.url.searchParams.get('view') as 'list' | 'grid') || 'list'
-	);
+	const viewMode = $derived.by<'list' | 'grid'>(() => {
+		const urlView = pageState.url.searchParams.get('view');
+		if (urlView === 'grid' || urlView === 'list') {
+			return urlView;
+		}
+		return settings.defaultTicketsView ?? 'list';
+	});
 
 	function setViewMode(mode: 'list' | 'grid') {
-		viewMode = mode;
 		const params = new URLSearchParams(pageState.url.searchParams);
-		if (mode === 'grid') {
-			params.set('view', 'grid');
-		} else {
+		if (mode === settings.defaultTicketsView) {
 			params.delete('view');
+		} else {
+			params.set('view', mode);
 		}
 		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true, replaceState: true });
 	}
@@ -86,8 +97,6 @@
 	$effect(() => {
 		searchValue = data.filters.search;
 		statusFilter = data.filters.status;
-		const urlView = pageState.url.searchParams.get('view');
-		viewMode = urlView === 'grid' ? 'grid' : 'list';
 	});
 
 	function applyFilter(overrides: { page?: number; status?: string; search?: string }) {
