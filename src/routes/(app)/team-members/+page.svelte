@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
-	import { initSettings } from '$lib/settings.svelte';
+	import { getSettings, initSettings } from '$lib/settings.svelte';
 
 	interface Props {
 		data: PageData;
@@ -12,6 +12,8 @@
 	}
 
 	let { data, form }: Props = $props();
+
+	const settings = $derived(getSettings());
 
 	onMount(() => {
 		initSettings();
@@ -43,7 +45,7 @@
 	let searchQuery       = $state(pageState.url.searchParams.get('search') ?? '');
 	let selectedDepartment = $state(pageState.url.searchParams.get('dept') ?? '');
 	let currentPage       = $state(Number(pageState.url.searchParams.get('page') ?? '1'));
-	const pageSize = 10;
+	const pageSize        = $derived(settings.itemsPerPage ?? 10);
 
 	// ── Selection & Bulk actions ──────────────────────────────────────
 	let selectedIds             = $state<string[]>([]);

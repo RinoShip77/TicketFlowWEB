@@ -21,11 +21,12 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 	const page = url.searchParams.get('page') ?? '1';
 	const status = url.searchParams.get('status') ?? '';
 	const search = url.searchParams.get('search') ?? '';
+	const limit = url.searchParams.get('limit') ?? '10';
 	const sortBy = url.searchParams.get('sortBy') ?? 'createdAt';
 	const orderBy = url.searchParams.get('orderBy') ?? 'desc';
 
 	// Construction de la query string
-	const params = new URLSearchParams({ page, limit: '10', sortBy, orderBy });
+	const params = new URLSearchParams({ page, limit, sortBy, orderBy });
 	if (status) params.set('status', status);
 	if (search) params.set('search', search);
 

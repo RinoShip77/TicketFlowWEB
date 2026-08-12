@@ -255,14 +255,14 @@
 				</svg>
 				Langue & Affichage
 			</h3>
-			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Paramétrez la langue et la pagination.</p>
+			<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Paramétrez la langue régionale et la taille des pages de résultats.</p>
 		</div>
 
 		<!-- Langue -->
 		<div class="flex items-center justify-between py-1">
 			<div>
 				<label for="select-language" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Langue d'affichage</label>
-				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Langue principale des menus et boutons.</p>
+				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Langue principale de l'interface régionale.</p>
 			</div>
 			<select
 				id="select-language"
@@ -270,8 +270,8 @@
 				onchange={(e) => saveSetting('language', (e.target as HTMLSelectElement).value as any)}
 				class="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
 			>
-				<option value="fr">Français 🇫🇷</option>
-				<option value="en">English 🇬🇧</option>
+				<option value="fr-CA">Français (Canada) 🇨🇦 (Par défaut)</option>
+				<option value="en-CA">English (Canada) 🇨🇦</option>
 			</select>
 		</div>
 
@@ -281,7 +281,7 @@
 		<div class="flex items-center justify-between py-1">
 			<div>
 				<label for="select-items-per-page" class="text-sm font-medium text-gray-800 dark:text-zinc-200">Éléments par page</label>
-				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Nombre de tickets et membres affichés par page.</p>
+				<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Nombre de billets et membres affichés par page (10, 25 ou 50).</p>
 			</div>
 			<select
 				id="select-items-per-page"

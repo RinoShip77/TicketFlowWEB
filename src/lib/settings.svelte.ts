@@ -10,7 +10,7 @@ export interface UserSettings {
 	emailNotifications: boolean;
 	soundAlerts: boolean;
 	autoRefresh: boolean;
-	language: 'fr' | 'en';
+	language: 'fr-CA' | 'en-CA';
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 	emailNotifications: true,
 	soundAlerts: false,
 	autoRefresh: true,
-	language: 'fr'
+	language: 'fr-CA'
 };
 
 let settingsState = $state<UserSettings>({ ...DEFAULT_SETTINGS });

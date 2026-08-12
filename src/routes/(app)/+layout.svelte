@@ -20,6 +20,12 @@
 
 	const settings = $derived(getSettings());
 
+	$effect(() => {
+		if (typeof document !== 'undefined' && settings.language) {
+			document.documentElement.lang = settings.language;
+		}
+	});
+
 	let mobileMenuOpen = $state(false);
 
 	const user = data.user;
