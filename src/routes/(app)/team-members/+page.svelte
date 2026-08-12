@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page as pageState } from '$app/state';
-	import type { PageData } from './$types';
+	import { enhance } from '$app/forms';
+	import type { ActionData, PageData } from './$types';
 
 	interface Props {
 		data: PageData;
+		form?: ActionData;
 	}
 
-	let { data }: Props = $props();
+	let { data, form }: Props = $props();
 
 	// ── Types ──────────────────────────────────────────────────────────
 	type SortField = 'name' | 'email' | 'department' | 'roleTitle' | 'status' | 'level';
@@ -22,6 +24,18 @@
 	let selectedDepartment = $state(pageState.url.searchParams.get('dept') ?? '');
 	let currentPage       = $state(Number(pageState.url.searchParams.get('page') ?? '1'));
 	const pageSize = 10;
+
+	// Modal de suppression
+	let isDeleteModalOpen = $state(false);
+	let deleteTargetId    = $state<string | null>(null);
+	let deleteTargetName  = $state('');
+	let isDeleting        = $state(false);
+
+	function confirmDelete(id: string, name: string) {
+		deleteTargetId   = id;
+		deleteTargetName = name;
+		isDeleteModalOpen = true;
+	}
 
 	// Sync si l'URL change (navigation arrière/avant)
 	$effect(() => {
@@ -127,7 +141,7 @@
 		sortedMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 	);
 
-	// Pagination pages — même logique que la page tickets
+	// Pagination pages
 	const paginationPages = $derived.by(() => {
 		const total = totalPages;
 		const cur   = currentPage;
@@ -427,7 +441,7 @@
 									</div>
 								</td>
 
-								<!-- Email (colonne cachée sur mobile, déjà dans Member) -->
+								<!-- Email -->
 								<td class="px-4 py-3.5 text-gray-500 dark:text-zinc-400 text-xs hidden md:table-cell">
 									{member.email}
 								</td>
@@ -465,24 +479,33 @@
 									{/if}
 								</td>
 
-								<!-- Action Icons -->
+								<!-- ── Action Buttons (Mêmes boutons que les tickets : "Ouvrir" + Poubelle) ── -->
 								<td class="px-4 py-3.5">
-									<div class="flex items-center gap-2.5 text-gray-400 dark:text-zinc-500">
-										<!-- View -->
-										<button class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" aria-label="Voir les détails">
-											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-												<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-											</svg>
-										</button>
-										<!-- Edit -->
-										<button class="hover:text-amber-500 transition-colors" aria-label="Modifier le membre">
-											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+									<div class="flex items-center gap-2">
+										<!-- Voir & Modifier → page détail -->
+										<a
+											href="/team-members/{member._id ?? member.id}"
+											class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg
+												text-indigo-700 dark:text-indigo-300
+												bg-indigo-50 dark:bg-indigo-950/40
+												hover:bg-indigo-100 dark:hover:bg-indigo-900/50
+												border border-indigo-200 dark:border-indigo-800/50
+												transition-colors"
+											aria-label="Voir et modifier le membre {member.name}"
+										>
+											<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
 												<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
 											</svg>
-										</button>
-										<!-- Delete -->
-										<button class="hover:text-red-500 transition-colors" aria-label="Supprimer le membre">
+											Ouvrir
+										</a>
+
+										<!-- Supprimer -->
+										<button
+											type="button"
+											onclick={() => confirmDelete(member._id ?? member.id, member.name)}
+											class="text-gray-400 dark:text-zinc-500 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40"
+											aria-label="Supprimer le membre {member.name}"
+										>
 											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
 												<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
 											</svg>
@@ -551,3 +574,70 @@
 	</div>
 
 </div>
+
+<!-- ── Modal de confirmation de suppression ────────────────────────── -->
+{#if isDeleteModalOpen}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-delete-title"
+	>
+		<div class="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-6 space-y-4">
+			<div class="flex items-center gap-3 text-red-600 dark:text-red-400">
+				<div class="p-2 rounded-full bg-red-100 dark:bg-red-950/60 shrink-0">
+					<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+					</svg>
+				</div>
+				<h3 id="modal-delete-title" class="text-lg font-bold text-gray-900 dark:text-white">Confirmer la suppression</h3>
+			</div>
+
+			<p class="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+				Êtes-vous sûr de vouloir supprimer le membre <strong class="text-gray-900 dark:text-zinc-200">«&nbsp;{deleteTargetName}&nbsp;»</strong> ? Cette action est irréversible.
+			</p>
+
+			<form
+				method="POST"
+				action="?/deleteMember"
+				use:enhance={() => {
+					isDeleting = true;
+					return async ({ update }) => {
+						await update();
+						isDeleting = false;
+						isDeleteModalOpen = false;
+					};
+				}}
+				class="flex items-center justify-end gap-3 pt-2"
+			>
+				<input type="hidden" name="id" value={deleteTargetId} />
+
+				<button
+					type="button"
+					onclick={() => isDeleteModalOpen = false}
+					disabled={isDeleting}
+					class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+				>
+					Annuler
+				</button>
+
+				<button
+					type="submit"
+					disabled={isDeleting}
+					id="confirm-delete-btn"
+					class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors inline-flex items-center gap-2"
+				>
+					{#if isDeleting}
+						<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+						</svg>
+						Suppression…
+					{:else}
+						Supprimer
+					{/if}
+				</button>
+			</form>
+		</div>
+	</div>
+{/if}

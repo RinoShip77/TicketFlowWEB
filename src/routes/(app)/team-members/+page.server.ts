@@ -5,8 +5,8 @@
  * Chaque membre de l'équipe EST un technicien enregistré dans la base de données.
  */
 
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 import { apiFetch, ApiException } from '$lib/server/api';
 import type { User } from '$lib/types';
 
@@ -53,5 +53,35 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		return {
 			members: [] as TeamMember[]
 		};
+	}
+};
+
+export const actions: Actions = {
+	deleteMember: async ({ request, cookies }) => {
+		const token = cookies.get('tf_token');
+		if (!token) throw redirect(302, '/login');
+
+		const data = await request.formData();
+		const id = data.get('id') as string;
+		if (!id) return fail(400, { deleteError: 'ID requis.' });
+
+		try {
+			await apiFetch(`/api/technicians/${id}`, {
+				method: 'DELETE',
+				token
+			});
+		} catch (err) {
+			if (err instanceof ApiException) {
+				if (err.statusCode === 401) {
+					cookies.delete('tf_token', { path: '/' });
+					cookies.delete('tf_user', { path: '/' });
+					throw redirect(302, '/login');
+				}
+				return fail(err.statusCode, { deleteError: err.message });
+			}
+			return fail(500, { deleteError: 'Erreur lors de la suppression.' });
+		}
+
+		return { action: 'deleteMember', success: true };
 	}
 };

@@ -47,15 +47,16 @@ test.describe('Team Members', () => {
 		expect(hasTable || hasEmpty).toBe(true);
 
 		if (hasTable) {
-			// Si le tableau est présent, vérifier qu'il y a au moins un bouton d'action
-			const actionButtons = page.getByRole('button', { name: /voir les détails/i });
-			await expect(actionButtons.first()).toBeVisible();
+			// Si le tableau est présent, vérifier que le bouton Ouvrir (lien avec crayon) est visible
+			const openLink = page.getByRole('link', { name: /ouvrir/i });
+			await expect(openLink.first()).toBeVisible();
 
-			// Bouton "Modifier le membre" doit aussi être présent
+			// Bouton "Supprimer le membre" doit aussi être présent
 			await expect(
-				page.getByRole('button', { name: /modifier le membre/i }).first()
+				page.getByRole('button', { name: /supprimer le membre/i }).first()
 			).toBeVisible();
 		}
+
 	});
 
 	// ── 3. Barre de recherche — présente et interactive ─────────────────
