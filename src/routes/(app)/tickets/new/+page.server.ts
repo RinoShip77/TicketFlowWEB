@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	createSingle: async ({ request, cookies }) => {
 		const token = cookies.get('tf_token');
 		if (!token) throw redirect(302, '/login');
 

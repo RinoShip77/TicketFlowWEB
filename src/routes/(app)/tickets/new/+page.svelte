@@ -11,6 +11,60 @@
 
 	const { technicians } = data;
 
+	let creationMode = $state<'single' | 'bulk'>('single');
+
+	// ── Mode création multiple ─────────────────────────────────────
+	interface BulkItem {
+		id: string;
+		title: string;
+		description: string;
+		priority: number;
+		originDepartment: string;
+		assignedTo: string;
+	}
+
+	let bulkItems = $state<BulkItem[]>([
+		{ id: '1', title: '', description: '', priority: 3, originDepartment: '', assignedTo: '' },
+		{ id: '2', title: '', description: '', priority: 3, originDepartment: '', assignedTo: '' }
+	]);
+
+	let bulkLoading = $state(false);
+
+	const bulkRowErrors = $derived<Record<number, string>>(
+		(form as any)?.action === 'createBulk' ? ((form as any)?.rowErrors ?? {}) : {}
+	);
+	const bulkFormError = $derived<string | undefined>(
+		(form as any)?.action === 'createBulk' ? (form as any)?.bulkFormError : undefined
+	);
+
+	function addBulkRow() {
+		bulkItems = [
+			...bulkItems,
+			{ id: String(Date.now()), title: '', description: '', priority: 3, originDepartment: '', assignedTo: '' }
+		];
+	}
+
+	function removeBulkRow(index: number) {
+		if (bulkItems.length > 1) {
+			bulkItems = bulkItems.filter((_, i) => i !== index);
+		}
+	}
+
+	function setAllBulkDepartment(dept: string) {
+		if (!dept) return;
+		bulkItems = bulkItems.map((item) => ({ ...item, originDepartment: dept }));
+	}
+
+	function setAllBulkTechnician(techId: string) {
+		if (!techId) return;
+		bulkItems = bulkItems.map((item) => ({ ...item, assignedTo: techId }));
+	}
+
+	function setAllBulkPriority(p: number) {
+		bulkItems = bulkItems.map((item) => ({ ...item, priority: p }));
+	}
+
+	// ── Mode création unique ──────────────────────────────────────
 	let loading = $state(false);
 	let title = $state((form as any)?.title ?? '');
 	let description = $state((form as any)?.description ?? '');
@@ -18,8 +72,16 @@
 	let originDepartment = $state((form as any)?.originDepartment ?? '');
 	let assignedTo = $state((form as any)?.assignedTo ?? '');
 
-	const fieldErrors = $derived(((form as any)?.errors as Record<string, string>) ?? {});
-	const formError = $derived((form as any)?.formError as string | undefined);
+	const fieldErrors = $derived<Record<string, string>>(
+		((form as any)?.action === 'createSingle' || !(form as any)?.action)
+			? (((form as any)?.errors as Record<string, string>) ?? {})
+			: {}
+	);
+	const formError = $derived<string | undefined>(
+		((form as any)?.action === 'createSingle' || !(form as any)?.action)
+			? ((form as any)?.formError as string | undefined)
+			: undefined
+	);
 
 	const priorityOptions = [
 		{ value: '1', label: 'Très faible', color: '#0ea5e9' },
@@ -39,12 +101,16 @@
 
 <svelte:head>
 	<title>Créer un ticket — TicketFlow</title>
-	<meta name="description" content="Créer un nouveau ticket de support TicketFlow." />
+	<meta name="description" content="Créer un ou plusieurs nouveaux tickets de support TicketFlow." />
 </svelte:head>
 
 <!-- Page header -->
-<div class="flex items-center justify-between mb-6">
-	<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Créer un nouveau ticket</h2>
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+	<div>
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Créer un nouveau ticket</h2>
+		<p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Ajoutez un ticket individuel ou plusieurs tickets en une seule fois.</p>
+	</div>
+
 	<a
 		href="/tickets"
 		class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors duration-200 shadow-sm"
@@ -55,6 +121,41 @@
 		Cancel
 	</a>
 </div>
+
+<!-- ── Mode switcher tab ─────────────────────────────────────────────── -->
+<div class="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800/60 p-1 rounded-xl mb-6 max-w-md">
+	<button
+		type="button"
+		onclick={() => creationMode = 'single'}
+		class="flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-150 flex items-center justify-center gap-2
+			{creationMode === 'single'
+				? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+				: 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200'}"
+	>
+		<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+			<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+		</svg>
+		Ticket unique
+	</button>
+
+	<button
+		type="button"
+		onclick={() => creationMode = 'bulk'}
+		id="btn-mode-bulk"
+		class="flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-150 flex items-center justify-center gap-2
+			{creationMode === 'bulk'
+				? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+				: 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200'}"
+	>
+		<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+			<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v2.25C15.75 20.77 14.52 22 13 22H4c-1.52 0-2.75-1.23-2.75-2.75V11c0-1.52 1.23-2.75 2.75-2.75h2.25m3 3h9c1.52 0 2.75 1.23 2.75 2.75v8c0 1.52-1.23 2.75-2.75 2.75h-9c-1.52 0-2.75-1.23-2.75-2.75v-8c0-1.52 1.23-2.75 2.75-2.75Z" />
+		</svg>
+		Lot de tickets
+	</button>
+</div>
+
+<!-- ══ MODE TICKET UNIQUE ═════════════════════════════════════════════ -->
+{#if creationMode === 'single'}
 
 {#if formError}
 	<div class="mb-5 p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-2" role="alert">
@@ -67,6 +168,7 @@
 
 <form
 	method="POST"
+	action="?/createSingle"
 	use:enhance={() => {
 		loading = true;
 		return async ({ update }) => {
@@ -76,6 +178,7 @@
 	}}
 	novalidate
 >
+
 	<!-- ── 2-column layout ──────────────────────────────────────────── -->
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -318,3 +421,223 @@
 		</button>
 	</div>
 </form>
+
+{:else}
+
+<!-- ══ MODE CRÉATION MULTIPLE (LOT) ════════════════════════════════════ -->
+{#if bulkFormError}
+	<div class="mb-5 p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-2" role="alert">
+		<svg class="w-4 h-4 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+			<path fill-rule="evenodd" d="M18 10A8 8 0 1 1 2 10a8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+		</svg>
+		{bulkFormError}
+	</div>
+{/if}
+
+<!-- Panneau de réglages rapides en lot -->
+<div class="mb-6 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/50 p-4 space-y-3">
+	<h3 class="text-xs font-semibold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">
+		Actions rapides globales (Appliquer à tous les tickets ci-dessous)
+	</h3>
+	<div class="flex flex-wrap items-center gap-3">
+		<!-- Appliquer Département -->
+		<select
+			onchange={(e) => setAllBulkDepartment((e.target as HTMLSelectElement).value)}
+			class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 cursor-pointer"
+		>
+			<option value="">Département à tous…</option>
+			{#each departments as dept}
+				<option value={dept}>{dept}</option>
+			{/each}
+		</select>
+
+		<!-- Appliquer Technicien -->
+		<select
+			onchange={(e) => setAllBulkTechnician((e.target as HTMLSelectElement).value)}
+			class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 cursor-pointer"
+		>
+			<option value="">Assigner technicien à tous…</option>
+			{#each technicians as tech}
+				<option value={tech._id}>{tech.name}</option>
+			{/each}
+		</select>
+
+		<!-- Appliquer Priorité -->
+		<select
+			onchange={(e) => setAllBulkPriority(Number((e.target as HTMLSelectElement).value))}
+			class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-200 cursor-pointer"
+		>
+			<option value="">Priorité à tous…</option>
+			<option value="1">P1 — Très faible</option>
+			<option value="2">P2 — Faible</option>
+			<option value="3">P3 — Moyenne</option>
+			<option value="4">P4 — Haute</option>
+			<option value="5">P5 — Critique</option>
+		</select>
+	</div>
+</div>
+
+<form
+	method="POST"
+	action="?/createBulk"
+	use:enhance={() => {
+		bulkLoading = true;
+		return async ({ update }) => {
+			await update();
+			bulkLoading = false;
+		};
+	}}
+>
+	<input type="hidden" name="tickets" value={JSON.stringify(bulkItems)} />
+
+	<div class="space-y-4">
+		{#each bulkItems as item, idx (item.id)}
+			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm p-5 space-y-4 relative">
+				<div class="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+					<span class="inline-flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
+						<span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-mono">
+							{idx + 1}
+						</span>
+						Ticket #{idx + 1}
+					</span>
+
+					{#if bulkItems.length > 1}
+						<button
+							type="button"
+							onclick={() => removeBulkRow(idx)}
+							class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 font-semibold flex items-center gap-1 transition-colors"
+						>
+							<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+							</svg>
+							Retirer
+						</button>
+					{/if}
+				</div>
+
+				{#if bulkRowErrors[idx]}
+					<p class="text-xs text-red-500 font-medium" role="alert">{bulkRowErrors[idx]}</p>
+				{/if}
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<!-- Titre -->
+					<div class="space-y-1 md:col-span-2">
+						<label for="bulk-title-{idx}" class="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+							Titre <span class="text-red-500">*</span>
+						</label>
+						<input
+							id="bulk-title-{idx}"
+							type="text"
+							bind:value={item.title}
+							required
+							placeholder="Ex: Problème d'impression bureau B102"
+							class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+						/>
+					</div>
+
+					<!-- Description -->
+					<div class="space-y-1 md:col-span-2">
+						<label for="bulk-desc-{idx}" class="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+							Description <span class="text-red-500">*</span>
+						</label>
+						<textarea
+							id="bulk-desc-{idx}"
+							bind:value={item.description}
+							required
+							rows="2"
+							placeholder="Brève description du problème…"
+							class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
+						></textarea>
+					</div>
+
+					<!-- Priorité -->
+					<div class="space-y-1">
+						<label for="bulk-prio-{idx}" class="text-xs font-semibold text-gray-700 dark:text-zinc-300">Priorité</label>
+						<select
+							id="bulk-prio-{idx}"
+							bind:value={item.priority}
+							class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 cursor-pointer"
+						>
+							<option value={1}>P1 — Très faible</option>
+							<option value={2}>P2 — Faible</option>
+							<option value={3}>P3 — Moyenne</option>
+							<option value={4}>P4 — Haute</option>
+							<option value={5}>P5 — Critique</option>
+						</select>
+					</div>
+
+					<!-- Département -->
+					<div class="space-y-1">
+						<label for="bulk-dept-{idx}" class="text-xs font-semibold text-gray-700 dark:text-zinc-300">Département</label>
+						<select
+							id="bulk-dept-{idx}"
+							bind:value={item.originDepartment}
+							class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 cursor-pointer"
+						>
+							<option value="">Sélectionner…</option>
+							{#each departments as dept}
+								<option value={dept}>{dept}</option>
+							{/each}
+						</select>
+					</div>
+
+					<!-- Assigné à -->
+					<div class="space-y-1 md:col-span-2">
+						<label for="bulk-assigned-{idx}" class="text-xs font-semibold text-gray-700 dark:text-zinc-300">Assigné à</label>
+						<select
+							id="bulk-assigned-{idx}"
+							bind:value={item.assignedTo}
+							class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 cursor-pointer"
+						>
+							<option value="">Non assigné</option>
+							{#each technicians as tech}
+								<option value={tech._id}>{tech.name}</option>
+							{/each}
+						</select>
+					</div>
+				</div>
+			</div>
+		{/each}
+	</div>
+
+	<!-- Bouton ajouter un ticket -->
+	<div class="mt-4">
+		<button
+			type="button"
+			onclick={addBulkRow}
+			id="btn-add-bulk-row"
+			class="w-full py-3 border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 hover:border-indigo-400 dark:hover:border-indigo-700 rounded-xl text-indigo-600 dark:text-indigo-400 font-semibold text-sm flex items-center justify-center gap-2 transition-colors bg-indigo-50/40 dark:bg-indigo-950/20"
+		>
+			<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+			</svg>
+			Ajouter un autre ticket à la liste ({bulkItems.length} actuellement)
+		</button>
+	</div>
+
+	<!-- Form Actions -->
+	<div class="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-gray-200 dark:border-zinc-800">
+		<button
+			type="submit"
+			disabled={bulkLoading || bulkItems.length === 0}
+			id="btn-submit-bulk-create"
+			class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors duration-200 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+		>
+			{#if bulkLoading}
+				<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z"></path>
+				</svg>
+				Création des tickets...
+			{:else}
+				<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+				</svg>
+				Créer les {bulkItems.length} tickets simultanément
+			{/if}
+		</button>
+	</div>
+</form>
+
+{/if}
+
