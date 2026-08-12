@@ -23,7 +23,7 @@ test.describe('Team Members', () => {
 
 	// ── 1. Rendu de base ───────────────────────────────────────────────
 	test('affiche la page Team Members avec le titre principal', async ({ page }) => {
-		await expect(page.getByRole('heading', { name: /team members/i })).toBeVisible();
+		await expect(page.getByRole('heading', { name: /team members/i, level: 2 })).toBeVisible();
 
 		// Bouton "Add Member" doit être visible
 		await expect(page.locator('#btn-add-member')).toBeVisible();

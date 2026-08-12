@@ -26,9 +26,10 @@ test.describe('Dashboard', () => {
 
 		// Les 4 cartes de métriques (Total Tickets, Open Tickets, In Progress, Resolved)
 		// sont rendues en tant que texte de label (uppercase tracking-wider)
-		await expect(page.getByText(/total tickets/i)).toBeVisible();
-		await expect(page.getByText(/in progress/i)).toBeVisible();
-		await expect(page.getByText(/resolved/i)).toBeVisible();
+		await expect(page.getByText(/total tickets/i).first()).toBeVisible();
+		await expect(page.getByText(/open tickets/i).first()).toBeVisible();
+		await expect(page.getByText(/in progress/i).first()).toBeVisible();
+		await expect(page.getByText(/resolved/i).first()).toBeVisible();
 	});
 
 	// ── 2. Rendu UI — sections du dashboard ────────────────────────────
